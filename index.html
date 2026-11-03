@@ -5,186 +5,359 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SM CALL</title>
+
 <style>
-*{box-sizing:border-box}
-body{
- margin:0;font-family:Arial,sans-serif;
- background:linear-gradient(145deg,#071b36,#123f70);
- color:white;min-height:100vh;
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #eef2ff;
+  color: #172554;
 }
-header{text-align:center;padding:30px 15px}
-.logo{
- width:75px;height:75px;border-radius:23px;
- background:#16c7a0;color:#062b3c;
- display:grid;place-items:center;
- font-size:29px;font-weight:bold;margin:auto;
+.container {
+  max-width: 430px;
+  min-height: 100vh;
+  margin: auto;
+  padding: 25px 20px;
+  background: white;
 }
-h1{margin:12px 0 5px}
-main{padding:18px;max-width:430px;margin:auto}
-.card{
- background:#ffffff15;border:1px solid #ffffff30;
- border-radius:18px;padding:20px;margin-bottom:16px;
+.logo {
+  text-align: center;
+  font-size: 34px;
+  font-weight: bold;
+  color: #2563eb;
+  margin: 35px 0 10px;
 }
-h2{font-size:20px}
-input{
- width:100%;padding:15px;margin:10px 0;
- border:1px solid #ffffff50;border-radius:12px;
- background:#ffffff18;color:white;font-size:16px;
+.subtitle {
+  text-align: center;
+  color: #64748b;
+  margin-bottom: 30px;
 }
-input::placeholder{color:#ddd}
-button{
- width:100%;padding:15px;border:0;border-radius:12px;
- margin-top:10px;background:#16c7a0;
- color:#062b3c;font-size:16px;font-weight:bold;
+h2 { text-align: center; }
+input {
+  width: 100%;
+  padding: 15px;
+  margin: 10px 0;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  font-size: 16px;
 }
-.secondary{background:#ffffff20;color:white}
-.hidden{display:none}
-nav{
- display:flex;justify-content:space-around;
- padding:18px 5px;background:#06172b;
- position:sticky;bottom:0;
+button {
+  width: 100%;
+  padding: 15px;
+  margin: 9px 0;
+  border: none;
+  border-radius: 10px;
+  background: #2563eb;
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
 }
-nav button{
- width:auto;background:none;color:white;
- padding:5px;font-size:13px;margin:0;
+.secondary { background: #0f172a; }
+.screen { display: none; }
+.screen.active { display: block; }
+#message {
+  text-align: center;
+  color: #dc2626;
+  font-size: 14px;
+  min-height: 22px;
 }
-.small{text-align:center;color:#b8d6e8;font-size:13px}
+#recaptcha-container {
+  margin: 15px 0;
+  display: flex;
+  justify-content: center;
+}
+.home-card {
+  padding: 20px;
+  margin: 15px 0;
+  background: #eff6ff;
+  border-radius: 14px;
+  text-align: center;
+}
+.home-card h3 { margin-bottom: 5px; }
+.nav {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 35px;
+  padding: 15px 0;
+  border-top: 1px solid #ddd;
+}
+.nav span { color: #2563eb; font-weight: bold; }
+.small {
+  text-align: center;
+  font-size: 13px;
+  color: #64748b;
+}
 </style>
 </head>
+
 <body>
+<div class="container">
 
-<header>
- <div class="logo">SM</div>
- <h1>SM CALL</h1>
- <p>Connect with Everyone ❤️</p>
-</header>
+  <div class="logo">SM CALL</div>
+  <p class="subtitle">Connect with everyone</p>
 
-<main>
+  <div id="login" class="screen active">
+    <h2>Login</h2>
+    <p class="small">ফোন নম্বর দিয়ে লগইন করো</p>
+    <input id="loginPhone" type="tel"
+      placeholder="+8801XXXXXXXXX">
+    <div id="recaptcha-container"></div>
+    <button onclick="sendOTP('login')">Send OTP</button>
+    <button class="secondary" onclick="showSignup()">
+      Create New Account
+    </button>
+  </div>
 
-<section id="login">
- <div class="card">
-  <h2>👋 Welcome to SM CALL</h2>
-  <p>আপনার অ্যাকাউন্টে প্রবেশ করুন</p>
-  <input id="phone" type="tel"
-   placeholder="আপনার মোবাইল নম্বর লিখুন">
-  <button onclick="sendOTP()">Continue</button>
-  <button class="secondary"
-   onclick="showSignup()">Create New Account</button>
-  <p class="small">আপনার যোগাযোগ, আপনার হাতেই।</p>
- </div>
-</section>
+  <div id="signup" class="screen">
+    <h2>Create Account</h2>
+    <input id="signupName" type="text"
+      placeholder="তোমার নাম">
+    <input id="signupPhone" type="tel"
+      placeholder="+8801XXXXXXXXX">
+    <div id="recaptcha-container-signup"></div>
+    <button onclick="sendOTP('signup')">Sign Up</button>
+    <button class="secondary" onclick="showLogin()">
+      Back to Login
+    </button>
+  </div>
 
-<section id="signup" class="hidden">
- <div class="card">
-  <h2>✨ Create Account</h2>
-  <input id="name" placeholder="আপনার নাম">
-  <input id="newphone" type="tel"
-   placeholder="মোবাইল নম্বর">
-  <button onclick="signup()">Sign Up</button>
-  <button class="secondary"
-   onclick="showLogin()">Back to Login</button>
- </div>
-</section>
+  <div id="otp" class="screen">
+    <h2>Verify OTP</h2>
+    <p class="small">তোমার ফোনে পাঠানো ৬ সংখ্যার কোড লিখো</p>
+    <input id="otpCode" type="text"
+      inputmode="numeric" maxlength="6"
+      placeholder="Enter 6 digit OTP">
+    <button onclick="verifyOTP()">Verify OTP</button>
+    <button class="secondary" onclick="showLogin()">
+      Back
+    </button>
+  </div>
 
-<section id="otp" class="hidden">
- <div class="card">
-  <h2>🔐 OTP Verification</h2>
-  <p>আপনার মোবাইল নম্বরে পাঠানো OTP লিখুন।</p>
-  <input id="otpcode" type="number"
-   placeholder="Enter OTP">
-  <button onclick="verifyOTP()">Verify OTP</button>
-  <button class="secondary"
-   onclick="showLogin()">Back</button>
-  <p class="small">এটি আপাতত ডেমো। আসল SMS OTP পরে Firebase দিয়ে যুক্ত হবে।</p>
- </div>
-</section>
+  <div id="home" class="screen">
+    <h2 id="welcome">Welcome to SM CALL</h2>
 
-<section id="home" class="hidden">
- <div class="card">
-  <h2>👋 স্বাগতম <span id="welcome">বন্ধু</span>!</h2>
-  <p>SM CALL-এ আপনাকে স্বাগতম।</p>
- </div>
+    <div class="home-card">
+      <h3>📞 Audio Call</h3>
+      <p>Audio calling feature coming soon</p>
+      <button onclick="coming()">Audio Call</button>
+    </div>
 
- <div class="card">
-  <h2>📞 Audio Call</h2>
-  <p>বন্ধুদের সঙ্গে ভয়েস কলে কথা বলুন।</p>
-  <button onclick="coming()">Call Now</button>
- </div>
+    <div class="home-card">
+      <h3>📹 Video Call</h3>
+      <p>Video calling feature coming soon</p>
+      <button onclick="coming()">Video Call</button>
+    </div>
 
- <div class="card">
-  <h2>🎥 Video Call</h2>
-  <p>ভিডিও কলে মুখোমুখি কথা বলুন।</p>
-  <button onclick="coming()">Video Call</button>
- </div>
+    <div class="home-card">
+      <h3>💬 Messages</h3>
+      <p>Chat feature coming soon</p>
+      <button onclick="coming()">Messages</button>
+    </div>
 
- <div class="card">
-  <h2>💬 Messages</h2>
-  <p>বন্ধুদের সঙ্গে চ্যাট করুন।</p>
-  <button onclick="coming()">Open Chat</button>
- </div>
+    <div class="nav">
+      <span>Home</span>
+      <span>Chat</span>
+      <span>Calls</span>
+      <span>Profile</span>
+    </div>
 
- <button class="secondary" onclick="logout()">Log Out</button>
-</section>
+    <button class="secondary" onclick="logout()">Log Out</button>
+  </div>
 
-</main>
+  <p id="message"></p>
+</div>
 
-<nav>
- <button onclick="showHome()">🏠 Home</button>
- <button onclick="coming()">💬 Chat</button>
- <button onclick="coming()">📞 Calls</button>
- <button onclick="coming()">👤 Profile</button>
-</nav>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 
 <script>
-let currentName="বন্ধু";
+const firebaseConfig = {
+  apiKey: "AIzaSyAw6buqSKRQBOr0hrgBeAwwrMPcRgSppY8",
+  authDomain: "sm-call-bf23e.firebaseapp.com",
+  projectId: "sm-call-bf23e",
+  storageBucket: "sm-call-bf23e.firebasestorage.app",
+  messagingSenderId: "844518596408",
+  appId: "1:844518596408:web:1437d01d2ae914cd5d2bcd"
+};
 
-function hideAll(){
- ["login","signup","otp","home"].forEach(id=>{
-  document.getElementById(id).classList.add("hidden");
- });
+firebase.initializeApp(firebaseConfig);
+
+const auth = firebase.auth();
+auth.languageCode = "bn";
+
+let confirmationResult = null;
+let pendingName = "";
+let recaptchaVerifier = null;
+
+function showScreen(id) {
+  document.querySelectorAll(".screen").forEach(screen => {
+    screen.classList.remove("active");
+  });
+  document.getElementById(id).classList.add("active");
+  setMessage("");
 }
-function showLogin(){
- hideAll();
- document.getElementById("login").classList.remove("hidden");
+
+function setMessage(text) {
+  document.getElementById("message").textContent = text;
 }
-function showSignup(){
- hideAll();
- document.getElementById("signup").classList.remove("hidden");
+
+function showLogin() {
+  showScreen("login");
+  resetCaptcha();
 }
-function showHome(){
- hideAll();
- document.getElementById("home").classList.remove("hidden");
+
+function showSignup() {
+  showScreen("signup");
+  resetCaptcha();
 }
-function sendOTP(){
- let phone=document.getElementById("phone").value.trim();
- if(phone.length<8){
-  alert("সঠিক মোবাইল নম্বর লিখুন");
-  return;
- }
- hideAll();
- document.getElementById("otp").classList.remove("hidden");
- alert("এটি ডেমো OTP স্ক্রিন। আসল SMS এখনো চালু হয়নি।");
+
+function showHome(name) {
+  showScreen("home");
+  document.getElementById("welcome").textContent =
+    "Welcome " + (name || "to SM CALL");
 }
-function signup(){
- let name=document.getElementById("name").value.trim();
- let phone=document.getElementById("newphone").value.trim();
- if(!name || phone.length<8){
-  alert("নাম ও সঠিক মোবাইল নম্বর দিন");
-  return;
- }
- currentName=name;
- document.getElementById("welcome").innerText=name;
- hideAll();
- document.getElementById("otp").classList.remove("hidden");
+
+function normalizePhone(value) {
+  let phone = value.trim().replace(/[\s()-]/g, "");
+
+  if (/^01[0-9]{9}$/.test(phone)) {
+    phone = "+88" + phone;
+  } else if (/^8801[0-9]{9}$/.test(phone)) {
+    phone = "+" + phone;
+  }
+
+  return phone;
 }
-function verifyOTP(){
- alert("আসল OTP Verification এখনো যুক্ত হয়নি। Firebase সেটআপের পর চালু হবে।");
+
+function resetCaptcha() {
+  if (recaptchaVerifier) {
+    try {
+      recaptchaVerifier.clear();
+    } catch (e) {}
+    recaptchaVerifier = null;
+  }
 }
-function logout(){
- showLogin();
+
+async function setupCaptcha(containerId) {
+  if (recaptchaVerifier) {
+    resetCaptcha();
+  }
+
+  recaptchaVerifier = new firebase.auth.RecaptchaVerifier(
+    containerId,
+    { size: "normal" },
+    auth
+  );
+
+  await recaptchaVerifier.render();
 }
-function coming(){
- alert("এই ফিচারটি শিগগিরই আসছে!");
+
+async function sendOTP(type) {
+  const phoneInput = type === "signup"
+    ? document.getElementById("signupPhone").value
+    : document.getElementById("loginPhone").value;
+
+  const phone = normalizePhone(phoneInput);
+
+  if (type === "signup") {
+    pendingName = document.getElementById("signupName").value.trim();
+
+    if (!pendingName) {
+      setMessage("তোমার নাম লিখো");
+      return;
+    }
+  }
+
+  if (!/^\+[1-9][0-9]{7,14}$/.test(phone)) {
+    setMessage("সঠিক ফোন নম্বর লিখো। যেমন +8801XXXXXXXXX");
+    return;
+  }
+
+  const containerId = type === "signup"
+    ? "recaptcha-container-signup"
+    : "recaptcha-container";
+
+  try {
+    setMessage("reCAPTCHA প্রস্তুত হচ্ছে...");
+    await setupCaptcha(containerId);
+
+    setMessage("OTP পাঠানো হচ্ছে...");
+
+    confirmationResult = await auth.signInWithPhoneNumber(
+      phone,
+      recaptchaVerifier
+    );
+
+    showScreen("otp");
+    setMessage("SMS পাঠানো হয়েছে। OTP লিখো।");
+
+  } catch (error) {
+    console.error(error);
+    resetCaptcha();
+
+    setMessage(
+      "OTP পাঠানো যায়নি: " + (error.message || error.code)
+    );
+  }
+}
+
+async function verifyOTP() {
+  const code = document.getElementById("otpCode").value.trim();
+
+  if (!confirmationResult) {
+    setMessage("আগে OTP পাঠাও");
+    return;
+  }
+
+  if (!/^[0-9]{6}$/.test(code)) {
+    setMessage("৬ সংখ্যার সঠিক OTP লিখো");
+    return;
+  }
+
+  try {
+    setMessage("OTP যাচাই হচ্ছে...");
+
+    const result = await confirmationResult.confirm(code);
+    const user = result.user;
+
+    if (pendingName) {
+      await user.updateProfile({
+        displayName: pendingName
+      });
+    }
+
+    const name = pendingName || user.displayName || "বন্ধু";
+
+    localStorage.setItem("smCallName", name);
+
+    pendingName = "";
+    confirmationResult = null;
+
+    showHome(name);
+
+  } catch (error) {
+    console.error(error);
+    setMessage("OTP ভুল অথবা মেয়াদ শেষ হয়েছে। আবার চেষ্টা করো।");
+  }
+}
+
+async function logout() {
+  try {
+    await auth.signOut();
+    localStorage.removeItem("smCallName");
+    confirmationResult = null;
+    pendingName = "";
+    document.getElementById("otpCode").value = "";
+    showLogin();
+  } catch (error) {
+    setMessage("Logout করা যায়নি");
+  }
+}
+
+function coming() {
+  alert("এই ফিচারটি এখনো তৈরি হচ্ছে।");
 }
 </script>
 
