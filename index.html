@@ -12,62 +12,181 @@ body{
  background:linear-gradient(145deg,#071b36,#123f70);
  color:white;min-height:100vh;
 }
-header{text-align:center;padding:35px 15px}
+header{text-align:center;padding:30px 15px}
 .logo{
- width:85px;height:85px;border-radius:25px;
+ width:75px;height:75px;border-radius:23px;
  background:#16c7a0;color:#062b3c;
  display:grid;place-items:center;
- font-size:30px;font-weight:bold;margin:auto;
+ font-size:29px;font-weight:bold;margin:auto;
 }
-h1{margin-bottom:5px}
-main{padding:20px;max-width:430px;margin:auto}
+h1{margin:12px 0 5px}
+main{padding:18px;max-width:430px;margin:auto}
 .card{
  background:#ffffff15;border:1px solid #ffffff30;
- border-radius:18px;padding:20px;margin-bottom:15px;
+ border-radius:18px;padding:20px;margin-bottom:16px;
 }
-h2{font-size:19px}
+h2{font-size:20px}
+input{
+ width:100%;padding:15px;margin:10px 0;
+ border:1px solid #ffffff50;border-radius:12px;
+ background:#ffffff18;color:white;font-size:16px;
+}
+input::placeholder{color:#ddd}
 button{
  width:100%;padding:15px;border:0;border-radius:12px;
  margin-top:10px;background:#16c7a0;
  color:#062b3c;font-size:16px;font-weight:bold;
 }
-nav{display:flex;justify-content:space-around;
- padding:18px;background:#06172b;position:sticky;bottom:0}
-nav span{font-size:13px}
+.secondary{background:#ffffff20;color:white}
+.hidden{display:none}
+nav{
+ display:flex;justify-content:space-around;
+ padding:18px 5px;background:#06172b;
+ position:sticky;bottom:0;
+}
+nav button{
+ width:auto;background:none;color:white;
+ padding:5px;font-size:13px;margin:0;
+}
+.small{text-align:center;color:#b8d6e8;font-size:13px}
 </style>
 </head>
 <body>
+
 <header>
  <div class="logo">SM</div>
  <h1>SM CALL</h1>
- <p>Connect with Everyone</p>
+ <p>Connect with Everyone ❤️</p>
 </header>
+
 <main>
+
+<section id="login">
  <div class="card">
-  <h2>👋 স্বাগতম SM CALL-এ</h2>
-  <p>বন্ধু ও পরিবারের সঙ্গে যোগাযোগ রাখুন।</p>
+  <h2>👋 Welcome to SM CALL</h2>
+  <p>আপনার অ্যাকাউন্টে প্রবেশ করুন</p>
+  <input id="phone" type="tel"
+   placeholder="আপনার মোবাইল নম্বর লিখুন">
+  <button onclick="sendOTP()">Continue</button>
+  <button class="secondary"
+   onclick="showSignup()">Create New Account</button>
+  <p class="small">আপনার যোগাযোগ, আপনার হাতেই।</p>
  </div>
+</section>
+
+<section id="signup" class="hidden">
+ <div class="card">
+  <h2>✨ Create Account</h2>
+  <input id="name" placeholder="আপনার নাম">
+  <input id="newphone" type="tel"
+   placeholder="মোবাইল নম্বর">
+  <button onclick="signup()">Sign Up</button>
+  <button class="secondary"
+   onclick="showLogin()">Back to Login</button>
+ </div>
+</section>
+
+<section id="otp" class="hidden">
+ <div class="card">
+  <h2>🔐 OTP Verification</h2>
+  <p>আপনার মোবাইল নম্বরে পাঠানো OTP লিখুন।</p>
+  <input id="otpcode" type="number"
+   placeholder="Enter OTP">
+  <button onclick="verifyOTP()">Verify OTP</button>
+  <button class="secondary"
+   onclick="showLogin()">Back</button>
+  <p class="small">এটি আপাতত ডেমো। আসল SMS OTP পরে Firebase দিয়ে যুক্ত হবে।</p>
+ </div>
+</section>
+
+<section id="home" class="hidden">
+ <div class="card">
+  <h2>👋 স্বাগতম <span id="welcome">বন্ধু</span>!</h2>
+  <p>SM CALL-এ আপনাকে স্বাগতম।</p>
+ </div>
+
  <div class="card">
   <h2>📞 Audio Call</h2>
-  <p>ভয়েস কলে কথা বলুন।</p>
-  <button onclick="alert('Audio Call শিগগিরই আসছে!')">Call Now</button>
+  <p>বন্ধুদের সঙ্গে ভয়েস কলে কথা বলুন।</p>
+  <button onclick="coming()">Call Now</button>
  </div>
+
  <div class="card">
   <h2>🎥 Video Call</h2>
   <p>ভিডিও কলে মুখোমুখি কথা বলুন।</p>
-  <button onclick="alert('Video Call শিগগিরই আসছে!')">Video Call</button>
+  <button onclick="coming()">Video Call</button>
  </div>
+
  <div class="card">
   <h2>💬 Messages</h2>
   <p>বন্ধুদের সঙ্গে চ্যাট করুন।</p>
-  <button onclick="alert('Messaging শিগগিরই আসছে!')">Open Chat</button>
+  <button onclick="coming()">Open Chat</button>
  </div>
+
+ <button class="secondary" onclick="logout()">Log Out</button>
+</section>
+
 </main>
+
 <nav>
- <span>🏠 Home</span>
- <span>💬 Chat</span>
- <span>📞 Calls</span>
- <span>👤 Profile</span>
+ <button onclick="showHome()">🏠 Home</button>
+ <button onclick="coming()">💬 Chat</button>
+ <button onclick="coming()">📞 Calls</button>
+ <button onclick="coming()">👤 Profile</button>
 </nav>
+
+<script>
+let currentName="বন্ধু";
+
+function hideAll(){
+ ["login","signup","otp","home"].forEach(id=>{
+  document.getElementById(id).classList.add("hidden");
+ });
+}
+function showLogin(){
+ hideAll();
+ document.getElementById("login").classList.remove("hidden");
+}
+function showSignup(){
+ hideAll();
+ document.getElementById("signup").classList.remove("hidden");
+}
+function showHome(){
+ hideAll();
+ document.getElementById("home").classList.remove("hidden");
+}
+function sendOTP(){
+ let phone=document.getElementById("phone").value.trim();
+ if(phone.length<8){
+  alert("সঠিক মোবাইল নম্বর লিখুন");
+  return;
+ }
+ hideAll();
+ document.getElementById("otp").classList.remove("hidden");
+ alert("এটি ডেমো OTP স্ক্রিন। আসল SMS এখনো চালু হয়নি।");
+}
+function signup(){
+ let name=document.getElementById("name").value.trim();
+ let phone=document.getElementById("newphone").value.trim();
+ if(!name || phone.length<8){
+  alert("নাম ও সঠিক মোবাইল নম্বর দিন");
+  return;
+ }
+ currentName=name;
+ document.getElementById("welcome").innerText=name;
+ hideAll();
+ document.getElementById("otp").classList.remove("hidden");
+}
+function verifyOTP(){
+ alert("আসল OTP Verification এখনো যুক্ত হয়নি। Firebase সেটআপের পর চালু হবে।");
+}
+function logout(){
+ showLogin();
+}
+function coming(){
+ alert("এই ফিচারটি শিগগিরই আসছে!");
+}
+</script>
+
 </body>
 </html>
