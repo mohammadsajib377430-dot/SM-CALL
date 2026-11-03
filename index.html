@@ -1,0 +1,73 @@
+
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SM CALL</title>
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;font-family:Arial,sans-serif;
+ background:linear-gradient(145deg,#071b36,#123f70);
+ color:white;min-height:100vh;
+}
+header{text-align:center;padding:35px 15px}
+.logo{
+ width:85px;height:85px;border-radius:25px;
+ background:#16c7a0;color:#062b3c;
+ display:grid;place-items:center;
+ font-size:30px;font-weight:bold;margin:auto;
+}
+h1{margin-bottom:5px}
+main{padding:20px;max-width:430px;margin:auto}
+.card{
+ background:#ffffff15;border:1px solid #ffffff30;
+ border-radius:18px;padding:20px;margin-bottom:15px;
+}
+h2{font-size:19px}
+button{
+ width:100%;padding:15px;border:0;border-radius:12px;
+ margin-top:10px;background:#16c7a0;
+ color:#062b3c;font-size:16px;font-weight:bold;
+}
+nav{display:flex;justify-content:space-around;
+ padding:18px;background:#06172b;position:sticky;bottom:0}
+nav span{font-size:13px}
+</style>
+</head>
+<body>
+<header>
+ <div class="logo">SM</div>
+ <h1>SM CALL</h1>
+ <p>Connect with Everyone</p>
+</header>
+<main>
+ <div class="card">
+  <h2>👋 স্বাগতম SM CALL-এ</h2>
+  <p>বন্ধু ও পরিবারের সঙ্গে যোগাযোগ রাখুন।</p>
+ </div>
+ <div class="card">
+  <h2>📞 Audio Call</h2>
+  <p>ভয়েস কলে কথা বলুন।</p>
+  <button onclick="alert('Audio Call শিগগিরই আসছে!')">Call Now</button>
+ </div>
+ <div class="card">
+  <h2>🎥 Video Call</h2>
+  <p>ভিডিও কলে মুখোমুখি কথা বলুন।</p>
+  <button onclick="alert('Video Call শিগগিরই আসছে!')">Video Call</button>
+ </div>
+ <div class="card">
+  <h2>💬 Messages</h2>
+  <p>বন্ধুদের সঙ্গে চ্যাট করুন।</p>
+  <button onclick="alert('Messaging শিগগিরই আসছে!')">Open Chat</button>
+ </div>
+</main>
+<nav>
+ <span>🏠 Home</span>
+ <span>💬 Chat</span>
+ <span>📞 Calls</span>
+ <span>👤 Profile</span>
+</nav>
+</body>
+</html>
