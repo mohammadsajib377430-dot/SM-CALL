@@ -22,7 +22,7 @@ body {
   max-width: 430px;
   min-height: 100vh;
   margin: auto;
-  padding: 24px 20px;
+  padding: 20px;
   background: #fff;
 }
 
@@ -31,32 +31,37 @@ body {
   font-size: 36px;
   font-weight: bold;
   color: #2563eb;
-  margin: 28px 0 8px;
+  margin: 20px 0 8px;
 }
-
 .logo span { color: #16a6d8; }
 
 .subtitle {
   text-align: center;
   color: #64748b;
-  margin-bottom: 30px;
+  margin-bottom: 25px;
 }
 
 h2 { text-align: center; }
 
-input {
+input, textarea {
   width: 100%;
-  padding: 15px;
-  margin: 10px 0;
+  padding: 14px;
+  margin: 9px 0;
   border: 1px solid #cbd5e1;
   border-radius: 12px;
   font-size: 16px;
+  font-family: Arial, sans-serif;
+}
+
+textarea {
+  min-height: 75px;
+  resize: vertical;
 }
 
 button {
   width: 100%;
-  padding: 15px;
-  margin: 9px 0;
+  padding: 14px;
+  margin: 8px 0;
   border: none;
   border-radius: 12px;
   background: #2563eb;
@@ -66,11 +71,9 @@ button {
   cursor: pointer;
 }
 
-button:disabled {
-  opacity: .6;
-}
-
+button:disabled { opacity: .6; }
 .secondary { background: #102b55; }
+.light-button { background: #e0ecff; color: #174b86; }
 
 .screen { display: none; }
 .screen.active { display: block; }
@@ -87,6 +90,7 @@ button:disabled {
   text-align: center;
   font-size: 13px;
   color: #64748b;
+  overflow-wrap: anywhere;
 }
 
 #recaptcha-container,
@@ -98,8 +102,8 @@ button:disabled {
 }
 
 .home-card {
-  padding: 20px;
-  margin: 15px 0;
+  padding: 17px;
+  margin: 13px 0;
   background: #eff6ff;
   border-radius: 16px;
   text-align: center;
@@ -107,35 +111,98 @@ button:disabled {
 }
 
 .home-card h3 { margin-bottom: 5px; }
-
-.home-card p {
-  color: #64748b;
-  font-size: 14px;
-}
-
-.nav {
-  display: flex;
-  justify-content: space-around;
-  margin-top: 25px;
-  padding: 15px 0;
-  border-top: 1px solid #ddd;
-}
-
-.nav span {
-  color: #2563eb;
-  font-weight: bold;
-  font-size: 13px;
-}
+.home-card p { color: #64748b; font-size: 14px; }
 
 .welcome-card {
   background: linear-gradient(120deg,#164eaa,#1685c9);
   color: white;
-  padding: 22px;
+  padding: 20px;
   border-radius: 16px;
-  margin: 20px 0;
+  margin: 15px 0;
+  overflow-wrap: anywhere;
 }
 
 .welcome-card p { margin-bottom: 0; }
+
+.nav {
+  display: flex;
+  justify-content: space-around;
+  gap: 5px;
+  margin-top: 20px;
+  padding: 13px 0;
+  border-top: 1px solid #ddd;
+}
+
+.nav button {
+  width: auto;
+  flex: 1;
+  padding: 10px 3px;
+  margin: 0;
+  font-size: 12px;
+  background: #eaf1ff;
+  color: #2563eb;
+}
+
+.section-card {
+  padding: 15px;
+  margin: 12px 0;
+  background: #f8fafc;
+  border: 1px solid #dbeafe;
+  border-radius: 14px;
+}
+
+.chat-item {
+  padding: 14px;
+  margin: 9px 0;
+  background: #eff6ff;
+  border: 1px solid #dbeafe;
+  border-radius: 12px;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+
+.chat-item strong { color: #174b86; }
+.chat-item p { margin: 6px 0 0; color: #64748b; font-size: 13px; }
+
+#messagesList {
+  height: 320px;
+  overflow-y: auto;
+  padding: 10px;
+  background: #f1f5f9;
+  border-radius: 12px;
+  margin: 12px 0;
+}
+
+.message-bubble {
+  max-width: 85%;
+  padding: 10px 12px;
+  margin: 8px 0;
+  border-radius: 12px;
+  background: white;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.message-bubble.mine {
+  margin-left: auto;
+  background: #dbeafe;
+}
+
+.message-bubble small {
+  display: block;
+  color: #64748b;
+  font-size: 11px;
+  margin-bottom: 4px;
+}
+
+.uid {
+  overflow-wrap: anywhere;
+  font-size: 12px;
+  color: #174b86;
+  background: #eaf1ff;
+  padding: 10px;
+  border-radius: 8px;
+}
 </style>
 </head>
 
@@ -171,12 +238,10 @@ button:disabled {
     <p class="small">SM CALL-এ নতুন অ্যাকাউন্ট তৈরি করো</p>
 
     <input id="signupName" type="text"
-      autocomplete="name"
-      placeholder="তোমার নাম">
+      autocomplete="name" placeholder="তোমার নাম">
 
     <input id="signupPhone" type="tel"
-      autocomplete="tel"
-      placeholder="+8801XXXXXXXXX">
+      autocomplete="tel" placeholder="+8801XXXXXXXXX">
 
     <div id="recaptcha-container-signup"></div>
 
@@ -195,16 +260,11 @@ button:disabled {
     <p class="small">তোমার ফোনে পাঠানো ৬ সংখ্যার কোড লিখো</p>
 
     <input id="otpCode" type="text"
-      inputmode="numeric"
-      autocomplete="one-time-code"
-      maxlength="6"
-      placeholder="Enter 6 digit OTP">
+      inputmode="numeric" autocomplete="one-time-code"
+      maxlength="6" placeholder="Enter 6 digit OTP">
 
     <button onclick="verifyOTP()">Verify OTP</button>
-
-    <button class="secondary" onclick="showLogin()">
-      Back to Login
-    </button>
+    <button class="secondary" onclick="showLogin()">Back to Login</button>
   </div>
 
   <!-- HOME -->
@@ -212,6 +272,13 @@ button:disabled {
     <div class="welcome-card">
       <h2 id="welcome">Welcome to SM CALL</h2>
       <p>তোমার বন্ধুদের সঙ্গে যুক্ত থাকো।</p>
+    </div>
+
+    <div class="section-card">
+      <strong>তোমার SM CALL ID</strong>
+      <p id="myUid" class="uid">লোড হচ্ছে...</p>
+      <button class="light-button" onclick="copyMyUid()">Copy My ID</button>
+      <p class="small">বন্ধুকে এই ID দিলে সে তোমাকে Chat-এ যুক্ত করতে পারবে।</p>
     </div>
 
     <div class="home-card">
@@ -228,24 +295,81 @@ button:disabled {
 
     <div class="home-card">
       <h3>💬 Messages</h3>
-      <p>Chat with your friends</p>
-      <button onclick="coming('Messages')">Messages</button>
+      <p>বন্ধুদের সঙ্গে মেসেজ করো</p>
+      <button onclick="openChats()">Open Messages</button>
     </div>
 
     <div class="home-card">
-      <h3>👥 Group Call</h3>
-      <p>Group calling feature</p>
-      <button onclick="coming('Group Call')">Group Call</button>
+      <h3>👥 Group Chat</h3>
+      <p>একটি গ্রুপে সর্বোচ্চ ২০ জন</p>
+      <button onclick="openChats()">Create Group Chat</button>
     </div>
 
     <div class="nav">
-      <span>🏠 Home</span>
-      <span>💬 Chat</span>
-      <span>📞 Calls</span>
-      <span>👤 Profile</span>
+      <button onclick="showScreen('home')">🏠 Home</button>
+      <button onclick="openChats()">💬 Chat</button>
+      <button onclick="coming('Calls')">📞 Calls</button>
+      <button onclick="openProfile()">👤 Profile</button>
     </div>
 
     <button class="secondary" onclick="logout()">Log Out</button>
+  </div>
+
+  <!-- CHAT LIST -->
+  <div id="chats" class="screen">
+    <h2>💬 Messages</h2>
+
+    <div class="section-card">
+      <strong>Personal Chat শুরু করো</strong>
+      <p class="small">বন্ধুর SM CALL ID লিখো</p>
+      <input id="friendUid" type="text" placeholder="বন্ধুর Firebase UID">
+      <button onclick="startPersonalChat()">Start Personal Chat</button>
+    </div>
+
+    <div class="section-card">
+      <strong>নতুন Group Chat তৈরি করো</strong>
+      <input id="groupName" type="text" placeholder="Group-এর নাম">
+      <textarea id="groupMembers" placeholder="সদস্যদের Firebase UID লিখো। একাধিক হলে কমা বা নতুন লাইনে আলাদা করো।"></textarea>
+      <p class="small">তোমাসহ সর্বোচ্চ ২০ জন।</p>
+      <button onclick="createGroupChat()">Create Group</button>
+    </div>
+
+    <h3>তোমার Chat List</h3>
+    <div id="chatList">
+      <p class="small">Chat লোড হচ্ছে...</p>
+    </div>
+
+    <button class="secondary" onclick="showScreen('home')">Back to Home</button>
+  </div>
+
+  <!-- CHAT ROOM -->
+  <div id="chatRoom" class="screen">
+    <h2 id="chatTitle">Chat</h2>
+    <p id="chatInfo" class="small"></p>
+
+    <div id="messagesList">
+      <p class="small">মেসেজ লোড হচ্ছে...</p>
+    </div>
+
+    <textarea id="messageInput" placeholder="তোমার মেসেজ লিখো..."></textarea>
+    <button id="sendMessageButton" onclick="sendMessage()">Send Message</button>
+
+    <button class="secondary" onclick="openChats()">Back to Chats</button>
+  </div>
+
+  <!-- PROFILE -->
+  <div id="profile" class="screen">
+    <h2>👤 My Profile</h2>
+    <div class="section-card">
+      <p><strong>Name:</strong></p>
+      <p id="profileName"></p>
+      <p><strong>Phone:</strong></p>
+      <p id="profilePhone" class="uid"></p>
+      <p><strong>Firebase UID:</strong></p>
+      <p id="profileUid" class="uid"></p>
+      <button class="light-button" onclick="copyMyUid()">Copy My ID</button>
+    </div>
+    <button class="secondary" onclick="showScreen('home')">Back to Home</button>
   </div>
 
   <p id="message" role="status" aria-live="polite"></p>
@@ -254,11 +378,12 @@ button:disabled {
 <!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 
 <script>
-// Firebase Configuration
+// FIREBASE CONFIGURATION
 const firebaseConfig = {
-  apiKey: "AIzaSyAw6buqSKRQBOr0hrgBeAwwrMPcRgSppY8",
+  apiKey: "AIzaSyAw6buqSKQRQBOr0hrgBeAwwrMPcRgSppY8",
   authDomain: "sm-call-bf23e.firebaseapp.com",
   projectId: "sm-call-bf23e",
   storageBucket: "sm-call-bf23e.firebasestorage.app",
@@ -269,12 +394,19 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 
 const auth = firebase.auth();
+const db = firebase.firestore();
 auth.languageCode = "bn";
 
 let confirmationResult = null;
 let pendingName = "";
 let recaptchaVerifier = null;
 let sendingOTP = false;
+
+let currentUser = null;
+let currentChatId = null;
+let currentChatData = null;
+let chatListUnsubscribe = null;
+let messagesUnsubscribe = null;
 
 // SCREEN CONTROL
 function showScreen(id) {
@@ -287,7 +419,7 @@ function showScreen(id) {
 }
 
 function setMessage(text) {
-  document.getElementById("message").textContent = text;
+  document.getElementById("message").textContent = text || "";
 }
 
 function showLogin() {
@@ -315,7 +447,7 @@ function normalizePhone(value) {
   return phone;
 }
 
-// CAPTCHA RESET
+// CAPTCHA
 function resetCaptcha() {
   if (recaptchaVerifier) {
     try {
@@ -327,7 +459,6 @@ function resetCaptcha() {
   }
 }
 
-// CAPTCHA SETUP
 async function setupCaptcha(containerId) {
   resetCaptcha();
 
@@ -378,7 +509,6 @@ async function sendOTP(type) {
 
   try {
     setMessage("reCAPTCHA প্রস্তুত হচ্ছে...");
-
     await setupCaptcha(containerId);
 
     setMessage("OTP পাঠানো হচ্ছে...");
@@ -394,11 +524,7 @@ async function sendOTP(type) {
   } catch (error) {
     console.error(error);
     resetCaptcha();
-
-    setMessage(
-      "OTP পাঠানো যায়নি: " +
-      (error.message || error.code || "Unknown error")
-    );
+    setMessage("OTP পাঠানো যায়নি: " + (error.message || error.code));
 
   } finally {
     sendingOTP = false;
@@ -428,28 +554,38 @@ async function verifyOTP() {
     const user = result.user;
 
     if (pendingName && user.displayName !== pendingName) {
-      await user.updateProfile({
-        displayName: pendingName
-      });
+      await user.updateProfile({ displayName: pendingName });
     }
 
     const name = pendingName || user.displayName || "বন্ধু";
 
     localStorage.setItem("smCallName", name);
-
     pendingName = "";
     confirmationResult = null;
 
     document.getElementById("otpCode").value = "";
 
+    await saveUserProfile(user, name);
     showHome(name);
 
   } catch (error) {
     console.error(error);
+    setMessage("OTP ভুল অথবা মেয়াদ শেষ হয়েছে। আবার চেষ্টা করো।");
+  }
+}
 
-    setMessage(
-      "OTP ভুল অথবা মেয়াদ শেষ হয়েছে। আবার চেষ্টা করো।"
-    );
+// USER PROFILE
+async function saveUserProfile(user, name) {
+  try {
+    await db.collection("users").doc(user.uid).set({
+      uid: user.uid,
+      name: name || user.displayName || "বন্ধু",
+      phoneNumber: user.phoneNumber || "",
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+  } catch (error) {
+    console.error("Profile save error:", error);
+    setMessage("অ্যাকাউন্ট হয়েছে, তবে Profile সংরক্ষণ হয়নি: " + error.message);
   }
 }
 
@@ -459,17 +595,30 @@ function showHome(name) {
 
   document.getElementById("welcome").textContent =
     "Welcome " + (name || "to SM CALL");
+
+  if (currentUser) {
+    document.getElementById("myUid").textContent = currentUser.uid;
+  }
 }
 
-// RESTORE LOGIN SESSION
-auth.onAuthStateChanged(user => {
+// AUTH SESSION
+auth.onAuthStateChanged(async user => {
+  currentUser = user;
+
   if (user) {
     const name = user.displayName ||
-      localStorage.getItem("smCallName") ||
-      "বন্ধু";
+      localStorage.getItem("smCallName") || "বন্ধু";
 
+    document.getElementById("myUid").textContent = user.uid;
     showHome(name);
+
+    try {
+      await saveUserProfile(user, name);
+    } catch (error) {
+      console.error(error);
+    }
   } else {
+    stopChatListeners();
     showScreen("login");
   }
 });
@@ -477,21 +626,370 @@ auth.onAuthStateChanged(user => {
 // LOGOUT
 async function logout() {
   try {
+    stopChatListeners();
     await auth.signOut();
 
     localStorage.removeItem("smCallName");
-
     confirmationResult = null;
     pendingName = "";
 
     document.getElementById("otpCode").value = "";
-
     resetCaptcha();
     showScreen("login");
 
   } catch (error) {
     console.error(error);
     setMessage("Logout করা যায়নি");
+  }
+}
+
+// PROFILE
+function openProfile() {
+  if (!currentUser) return;
+
+  document.getElementById("profileName").textContent =
+    currentUser.displayName || localStorage.getItem("smCallName") || "বন্ধু";
+
+  document.getElementById("profilePhone").textContent =
+    currentUser.phoneNumber || "তথ্য পাওয়া যায়নি";
+
+  document.getElementById("profileUid").textContent = currentUser.uid;
+
+  showScreen("profile");
+}
+
+// COPY UID
+async function copyMyUid() {
+  if (!currentUser) return;
+
+  try {
+    await navigator.clipboard.writeText(currentUser.uid);
+    setMessage("তোমার ID কপি হয়েছে");
+  } catch (error) {
+    setMessage("কপি করা যায়নি। ID চেপে ধরে কপি করো।");
+  }
+}
+
+// CHAT LISTENERS
+function stopChatListeners() {
+  if (chatListUnsubscribe) {
+    chatListUnsubscribe();
+    chatListUnsubscribe = null;
+  }
+
+  if (messagesUnsubscribe) {
+    messagesUnsubscribe();
+    messagesUnsubscribe = null;
+  }
+
+  currentChatId = null;
+  currentChatData = null;
+}
+
+function openChats() {
+  if (!currentUser) {
+    setMessage("আগে Login করো");
+    return;
+  }
+
+  showScreen("chats");
+  loadChatList();
+}
+
+// LOAD CHAT LIST
+function loadChatList() {
+  if (!currentUser) return;
+
+  if (chatListUnsubscribe) {
+    chatListUnsubscribe();
+  }
+
+  const list = document.getElementById("chatList");
+  list.textContent = "Chat লোড হচ্ছে...";
+
+  chatListUnsubscribe = db.collection("chats")
+    .where("members", "array-contains", currentUser.uid)
+    .onSnapshot(snapshot => {
+      list.replaceChildren();
+
+      if (snapshot.empty) {
+        const empty = document.createElement("p");
+        empty.className = "small";
+        empty.textContent = "এখনো কোনো Chat নেই। নতুন Personal Chat বা Group তৈরি করো।";
+        list.appendChild(empty);
+        return;
+      }
+
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const item = document.createElement("div");
+        item.className = "chat-item";
+
+        const title = document.createElement("strong");
+        title.textContent = data.title ||
+          (data.members || []).filter(id => id !== currentUser.uid)[0] ||
+          "Personal Chat";
+
+        const preview = document.createElement("p");
+        preview.textContent = data.lastMessage || "এখনো কোনো মেসেজ নেই";
+
+        item.appendChild(title);
+        item.appendChild(preview);
+        item.addEventListener("click", () => openChatRoom(doc.id, data));
+
+        list.appendChild(item);
+      });
+
+    }, error => {
+      console.error(error);
+      list.textContent = "Chat লোড করা যায়নি: " + error.message;
+    });
+}
+
+// START PERSONAL CHAT
+async function startPersonalChat() {
+  if (!currentUser) return;
+
+  const friendUid = document.getElementById("friendUid").value.trim();
+
+  if (!friendUid) {
+    setMessage("বন্ধুর Firebase UID লিখো");
+    return;
+  }
+
+  if (friendUid === currentUser.uid) {
+    setMessage("নিজের সঙ্গে Personal Chat করা যাবে না");
+    return;
+  }
+
+  try {
+    setMessage("Personal Chat তৈরি হচ্ছে...");
+
+    const snapshot = await db.collection("chats")
+      .where("members", "array-contains", currentUser.uid)
+      .get();
+
+    let existingChat = null;
+
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      const members = data.members || [];
+
+      if (
+        data.type === "personal" &&
+        members.length === 2 &&
+        members.includes(friendUid)
+      ) {
+        existingChat = { id: doc.id, data: data };
+      }
+    });
+
+    if (existingChat) {
+      openChatRoom(existingChat.id, existingChat.data);
+      return;
+    }
+
+    const chatData = {
+      type: "personal",
+      title: "Personal Chat",
+      members: [currentUser.uid, friendUid],
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      lastMessage: "",
+      lastMessageAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+
+    const ref = await db.collection("chats").add(chatData);
+
+    document.getElementById("friendUid").value = "";
+    openChatRoom(ref.id, chatData);
+    setMessage("Personal Chat তৈরি হয়েছে");
+
+  } catch (error) {
+    console.error(error);
+    setMessage("Chat তৈরি হয়নি: " + error.message);
+  }
+}
+
+// CREATE GROUP CHAT
+async function createGroupChat() {
+  if (!currentUser) return;
+
+  const title = document.getElementById("groupName").value.trim();
+  const rawMembers = document.getElementById("groupMembers").value;
+
+  if (!title) {
+    setMessage("Group-এর নাম লিখো");
+    return;
+  }
+
+  const invited = rawMembers
+    .split(/[\n,; ]+/)
+    .map(id => id.trim())
+    .filter(id => id.length > 0);
+
+  const members = [...new Set([currentUser.uid, ...invited])];
+
+  if (members.length < 2) {
+    setMessage("Group-এ অন্তত একজন বন্ধুর UID যোগ করো");
+    return;
+  }
+
+  if (members.length > 20) {
+    setMessage("একটি Group-এ সর্বোচ্চ ২০ জন রাখা যাবে");
+    return;
+  }
+
+  try {
+    setMessage("Group তৈরি হচ্ছে...");
+
+    const groupData = {
+      type: "group",
+      title: title,
+      members: members,
+      createdBy: currentUser.uid,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      lastMessage: "",
+      lastMessageAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+
+    const ref = await db.collection("chats").add(groupData);
+
+    document.getElementById("groupName").value = "";
+    document.getElementById("groupMembers").value = "";
+
+    openChatRoom(ref.id, groupData);
+    setMessage("Group তৈরি হয়েছে");
+
+  } catch (error) {
+    console.error(error);
+    setMessage("Group তৈরি হয়নি: " + error.message);
+  }
+}
+
+// OPEN CHAT ROOM
+function openChatRoom(chatId, data) {
+  if (!currentUser) return;
+
+  if (messagesUnsubscribe) {
+    messagesUnsubscribe();
+    messagesUnsubscribe = null;
+  }
+
+  currentChatId = chatId;
+  currentChatData = data;
+
+  document.getElementById("chatTitle").textContent =
+    data.title || "Personal Chat";
+
+  document.getElementById("chatInfo").textContent =
+    (data.type === "group" ? "Group Chat" : "Personal Chat") +
+    " • সদস্য: " + (data.members || []).length;
+
+  document.getElementById("messagesList").textContent =
+    "মেসেজ লোড হচ্ছে...";
+
+  document.getElementById("messageInput").value = "";
+
+  showScreen("chatRoom");
+  loadMessages(chatId);
+}
+
+// LOAD MESSAGES
+function loadMessages(chatId) {
+  messagesUnsubscribe = db.collection("chats")
+    .doc(chatId)
+    .collection("messages")
+    .orderBy("createdAt", "asc")
+    .onSnapshot(snapshot => {
+      const box = document.getElementById("messagesList");
+      box.replaceChildren();
+
+      if (snapshot.empty) {
+        const empty = document.createElement("p");
+        empty.className = "small";
+        empty.textContent = "এখনো কোনো মেসেজ নেই। প্রথম মেসেজটি পাঠাও।";
+        box.appendChild(empty);
+        return;
+      }
+
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const bubble = document.createElement("div");
+
+        bubble.className = "message-bubble" +
+          (data.senderId === currentUser.uid ? " mine" : "");
+
+        const sender = document.createElement("small");
+        sender.textContent = data.senderId === currentUser.uid
+          ? "তুমি"
+          : (data.senderName || "বন্ধু");
+
+        const text = document.createElement("div");
+        text.textContent = data.text || "";
+
+        bubble.appendChild(sender);
+        bubble.appendChild(text);
+        box.appendChild(bubble);
+      });
+
+      box.scrollTop = box.scrollHeight;
+
+    }, error => {
+      console.error(error);
+      document.getElementById("messagesList").textContent =
+        "মেসেজ লোড হয়নি: " + error.message;
+    });
+}
+
+// SEND MESSAGE
+async function sendMessage() {
+  if (!currentUser || !currentChatId) {
+    setMessage("আগে একটি Chat খোলো");
+    return;
+  }
+
+  const input = document.getElementById("messageInput");
+  const text = input.value.trim();
+
+  if (!text) {
+    setMessage("মেসেজ লিখো");
+    return;
+  }
+
+  if (text.length > 5000) {
+    setMessage("মেসেজ ৫০০০ অক্ষরের মধ্যে রাখো");
+    return;
+  }
+
+  const button = document.getElementById("sendMessageButton");
+  button.disabled = true;
+
+  try {
+    const chatRef = db.collection("chats").doc(currentChatId);
+    const messageData = {
+      text: text,
+      senderId: currentUser.uid,
+      senderName: currentUser.displayName ||
+        localStorage.getItem("smCallName") || "বন্ধু",
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+
+    await chatRef.collection("messages").add(messageData);
+
+    await chatRef.update({
+      lastMessage: text,
+      lastMessageAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    input.value = "";
+    setMessage("মেসেজ পাঠানো হয়েছে");
+
+  } catch (error) {
+    console.error(error);
+    setMessage("মেসেজ পাঠানো যায়নি: " + error.message);
+
+  } finally {
+    button.disabled = false;
   }
 }
 
