@@ -33,6 +33,8 @@ Not yet production-ready:
 
 The web prototype is configured for the Firebase project `sm-call-bf23e`.
 
+The current client code stores display names in `users/{uid}` and phone numbers in the owner-only `privateUsers/{uid}` collection. The Firestore rules in this repository must be published in the Firebase Console before this protection takes effect. On a user's next successful sign-in, the app migrates the phone number out of the public profile document into the private document; existing records are not changed until that sign-in occurs.
+
 Before testing:
 1. Confirm **Phone** is enabled under Firebase Authentication sign-in providers.
 2. Add the deployed GitHub Pages hostname to Firebase Authentication's authorized domains.
