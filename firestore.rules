@@ -12,9 +12,19 @@ service cloud.firestore {
     }
 
     match /users/{userId} {
-      // The prototype looks up a friend's profile by Firebase UID.
-      // Only authenticated users can read an individual profile.
+      // Public profile fields only (UID and display name).
+      // Authenticated users can look up a friend's profile by Firebase UID.
       allow get: if signedIn();
+      allow list: if false;
+      allow create, update: if signedIn()
+        && request.auth.uid == userId
+        && !request.resource.data.keys().hasAny(['phone']);
+      allow delete: if false;
+    }
+
+    match /privateUsers/{userId} {
+      // Phone numbers and other private account data are owner-only.
+      allow get: if signedIn() && request.auth.uid == userId;
       allow list: if false;
       allow create, update: if signedIn() && request.auth.uid == userId;
       allow delete: if false;
