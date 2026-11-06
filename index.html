@@ -641,6 +641,13 @@ async function saveUserProfile() {
   await userRef.set({
     uid: uid,
     name: name,
+    phone: firebase.firestore.FieldValue.delete(),
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  }, { merge: true });
+
+  // Keep phone numbers in a private document readable only by its owner.
+  await db.collection("privateUsers").doc(uid).set({
+    uid: uid,
     phone: currentUser.phoneNumber || "",
     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
   }, { merge: true });
@@ -650,10 +657,13 @@ async function saveUserProfile() {
 async function showHome() {
   if (!currentUser) return;
 
-  const doc = await db.collection("users")
-    .doc(currentUser.uid).get();
+  const [doc, privateDoc] = await Promise.all([
+    db.collection("users").doc(currentUser.uid).get(),
+    db.collection("privateUsers").doc(currentUser.uid).get()
+  ]);
 
   const data = doc.exists ? doc.data() : {};
+  const privateData = privateDoc.exists ? privateDoc.data() : {};
 
   document.getElementById("userGreeting").textContent =
     "স্বাগতম, " + (data.name || "বন্ধু");
@@ -662,7 +672,7 @@ async function showHome() {
     data.name || "SM CALL User";
 
   document.getElementById("profilePhone").textContent =
-    data.phone || currentUser.phoneNumber || "";
+    privateData.phone || currentUser.phoneNumber || "";
 
   document.getElementById("profileUID").textContent =
     "User ID: " + currentUser.uid;
