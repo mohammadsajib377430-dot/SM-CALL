@@ -1,0 +1,49 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isChatMember(chatId) {
+      return signedIn()
+        && exists(/databases/$(database)/documents/chats/$(chatId))
+        && request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.members;
+    }
+
+    match /users/{userId} {
+      // The prototype looks up a friend's profile by Firebase UID.
+      // Only authenticated users can read an individual profile.
+      allow get: if signedIn();
+      allow list: if false;
+      allow create, update: if signedIn() && request.auth.uid == userId;
+      allow delete: if false;
+    }
+
+    match /chats/{chatId} {
+      allow get, list: if signedIn()
+        && request.auth.uid in resource.data.members;
+
+      allow create: if signedIn()
+        && request.resource.data.members is list
+        && request.auth.uid in request.resource.data.members
+        && request.resource.data.members.size() >= 2
+        && request.resource.data.members.size() <= 20
+        && request.resource.data.type in ['personal', 'group'];
+
+      // Membership and chat metadata changes need a separately designed,
+      // validated invitation/leave flow; deny them in this prototype.
+      allow update, delete: if false;
+
+      match /messages/{messageId} {
+        allow get, list: if isChatMember(chatId);
+        allow create: if isChatMember(chatId)
+          && request.resource.data.sender == request.auth.uid
+          && request.resource.data.text is string
+          && request.resource.data.text.size() > 0
+          && request.resource.data.text.size() <= 5000;
+        allow update, delete: if false;
+      }
+    }
+  }
+}
