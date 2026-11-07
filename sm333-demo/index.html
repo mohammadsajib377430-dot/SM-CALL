@@ -1,45 +1,75 @@
 <!DOCTYPE html>
 <html lang="bn">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#10121b">
-<title>SM 333 | Game Lobby Demo</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#101522">
+<title>SM 333 | Home</title>
 <style>
-:root{--bg:#0d1018;--panel:#171c29;--panel2:#202737;--gold:#f3c65e;--gold2:#d99a32;--muted:#9ba5b8;--line:#30394a}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f7f8fb;font-family:Arial,"Noto Sans Bengali",sans-serif;padding-bottom:76px}.app{max-width:480px;margin:auto;min-height:100vh;background:linear-gradient(180deg,#161b29 0,#0d1018 330px)}
-.top{padding:13px 14px;display:flex;align-items:center;justify-content:space-between;background:#151a26;position:sticky;top:0;z-index:4;border-bottom:1px solid #ffffff12}.logo{font-weight:1000;font-size:24px;letter-spacing:1px;color:var(--gold)}.logo span{color:#fff}.top-actions{display:flex;gap:7px}.btn{border:1px solid #536078;background:#222a3a;color:#fff;padding:8px 11px;border-radius:8px;font-size:12px;font-weight:700}.btn.gold{background:linear-gradient(135deg,#ffe08b,#d99a32);border:0;color:#241909}
-main{padding:12px}.hero{border-radius:13px;overflow:hidden;position:relative;padding:20px 16px;background:linear-gradient(110deg,#47321c,#252235 60%,#17263a);border:1px solid #a57c3a66;min-height:144px}.hero:after{content:"🎮";position:absolute;right:14px;top:28px;font-size:65px;filter:drop-shadow(0 7px 10px #0008)}.hero .tag{font-size:10px;color:#ffdc8c;letter-spacing:1px;font-weight:bold}.hero h1{font-size:21px;line-height:1.3;margin:9px 0 6px;max-width:250px}.hero p{font-size:11px;color:#ddd3c1;margin:0;max-width:250px}.dots{display:flex;gap:5px;margin-top:14px}.dots i{width:16px;height:4px;border-radius:5px;background:#ffffff55}.dots i:first-child{background:var(--gold)}
-.quick{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:11px}.quick button{background:var(--panel);border:1px solid var(--line);border-radius:9px;color:#fff;padding:10px 4px;font-size:11px}.quick b{display:block;color:var(--gold);font-size:18px;margin-bottom:4px}
-.wallet{display:flex;justify-content:space-between;align-items:center;background:linear-gradient(100deg,#202b3b,#182131);border:1px solid #3b4a60;border-radius:11px;padding:12px;margin-top:11px}.wallet small{color:var(--muted);font-size:10px}.wallet strong{display:block;color:var(--gold);font-size:18px;margin-top:3px}.wallet .btn{background:#28374a;border-color:#65738a}
-.tabs{display:flex;gap:7px;overflow:auto;padding:15px 0 5px;scrollbar-width:none}.tabs button{white-space:nowrap;border:1px solid var(--line);background:#1a202d;color:#c4cada;border-radius:20px;padding:8px 13px;font-size:11px}.tabs button.active{background:linear-gradient(135deg,#f7d77f,#d69b39);color:#241a08;border-color:transparent;font-weight:bold}
-.head{display:flex;justify-content:space-between;align-items:center;margin:17px 2px 10px}.head h2{font-size:15px;margin:0}.head a{font-size:11px;color:var(--gold);text-decoration:none}
-.gamegrid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}.game{height:116px;border-radius:11px;position:relative;overflow:hidden;border:1px solid #ffffff18;padding:11px;background:linear-gradient(135deg,#35425b,#20283a)}.game:nth-child(2){background:linear-gradient(135deg,#59402a,#292638)}.game:nth-child(3){background:linear-gradient(135deg,#234a4d,#20283a)}.game:nth-child(4){background:linear-gradient(135deg,#56304a,#292638)}.game:nth-child(5){background:linear-gradient(135deg,#3b3d65,#20283a)}.game:nth-child(6){background:linear-gradient(135deg,#51452a,#24283a)}.game .emoji{font-size:36px;display:block;text-shadow:0 4px 8px #0008}.game strong{position:absolute;bottom:10px;left:11px;font-size:12px}.game small{position:absolute;bottom:10px;right:10px;font-size:9px;color:#f4d88e}
-.promo{display:flex;gap:12px;align-items:center;padding:12px;border-radius:11px;background:linear-gradient(110deg,#46321d,#282333);border:1px solid #8c693d66}.promo .gift{font-size:31px}.promo strong{font-size:12px;color:#ffdc8c}.promo p{font-size:10px;color:#d2c8b7;margin:4px 0 0;line-height:1.5}
-.sports{display:grid;gap:8px}.match{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:11px}.match .league{font-size:9px;color:var(--gold);margin-bottom:7px}.teams{display:flex;justify-content:space-between;align-items:center;font-size:11px}.teams b{font-size:10px;color:#c4cada}
-.disclaimer{font-size:10px;color:#8791a3;line-height:1.6;margin:17px 2px}
-.bottom{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(100%,480px);display:grid;grid-template-columns:repeat(5,1fr);background:#151a26;border-top:1px solid var(--line);padding:9px 2px calc(9px + env(safe-area-inset-bottom));z-index:5}.bottom a{text-align:center;color:#aab3c3;text-decoration:none;font-size:9px}.bottom b{display:block;font-size:18px;margin-bottom:4px}.bottom a:first-child{color:var(--gold)}
-@media(min-width:500px){body{padding:18px 0}.app{border:1px solid #30394a;border-radius:16px;overflow:hidden}}
-</style></head>
+:root{--bg:#0b101b;--panel:#151e2d;--panel2:#1d2a3d;--gold:#f3c45d;--gold2:#d99532;--muted:#a9b4c5;--line:#2d3b50}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:#080d16;color:#f6f7fb;font-family:Arial,"Noto Sans Bengali",sans-serif;padding-bottom:76px}.app{max-width:480px;margin:auto;min-height:100vh;background:linear-gradient(180deg,#172236 0,#0b101b 420px)}
+.ticker{height:30px;display:flex;align-items:center;overflow:hidden;background:#080d15;border-bottom:1px solid #273347;color:#f4d58b;font-size:10px;white-space:nowrap}.ticker span{display:inline-block;padding-left:100%;animation:scroll 24s linear infinite}@keyframes scroll{to{transform:translateX(-100%)}}
+header{height:60px;padding:0 13px;display:flex;align-items:center;justify-content:space-between;background:#121b2a;position:sticky;top:0;z-index:10;border-bottom:1px solid #ffffff12}.logo{font-weight:1000;font-size:25px;letter-spacing:1px;color:var(--gold)}.logo span{color:white}.actions{display:flex;gap:7px}.btn{border:1px solid #52647e;background:#202d40;color:#fff;border-radius:7px;padding:8px 11px;font-size:11px;font-weight:bold}.btn.gold{background:linear-gradient(135deg,#ffe28e,#d79631);color:#251a08;border:0}
+main{padding:12px}.hero{height:174px;border-radius:13px;overflow:hidden;position:relative;padding:18px 15px;background:radial-gradient(circle at 85% 40%,#a66b31 0,#5a382c 18%,transparent 42%),linear-gradient(110deg,#273b57,#171e31 65%,#3c2632);border:1px solid #b58b4a66}.hero:after{content:"🎮";position:absolute;right:14px;top:36px;font-size:65px;filter:drop-shadow(0 7px 9px #0009)}.eyebrow{font-size:9px;color:#ffe29b;letter-spacing:1.4px;font-weight:bold}.hero h1{font-size:21px;line-height:1.3;max-width:245px;margin:9px 0 5px}.hero p{font-size:10px;color:#e1d9cc;max-width:235px;line-height:1.5;margin:0}.hero .btn{margin-top:12px}.dots{display:flex;gap:5px;margin-top:12px}.dots i{height:4px;width:14px;border-radius:4px;background:#ffffff55}.dots i:first-child{background:var(--gold)}
+.quick{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:11px 0}.quick button{border:1px solid var(--line);background:var(--panel);color:#e9edf5;border-radius:9px;padding:10px 2px;font-size:9px}.quick b{display:block;font-size:20px;color:var(--gold);margin-bottom:5px}
+.wallet{display:flex;justify-content:space-between;align-items:center;padding:11px 12px;border:1px solid #45546a;border-radius:10px;background:linear-gradient(100deg,#26364b,#182437)}.wallet small{font-size:9px;color:var(--muted)}.wallet strong{display:block;font-size:16px;color:var(--gold);margin-top:3px}
+.section-head{display:flex;justify-content:space-between;align-items:center;margin:17px 2px 9px}.section-head h2{font-size:14px;margin:0}.section-head a{color:var(--gold);font-size:10px;text-decoration:none}
+.category{display:flex;gap:7px;overflow:auto;scrollbar-width:none;padding:1px 0 4px}.category button{white-space:nowrap;border:1px solid var(--line);background:#182233;color:#cbd3df;border-radius:18px;padding:8px 13px;font-size:10px}.category button.active{background:linear-gradient(135deg,#ffe28e,#d79631);color:#251a08;border:0;font-weight:bold}
+.games{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.game{height:103px;border:1px solid #ffffff19;border-radius:10px;position:relative;overflow:hidden;padding:9px;background:linear-gradient(140deg,#4c3450,#202b40)}.game:nth-child(2){background:linear-gradient(140deg,#31516a,#20283c)}.game:nth-child(3){background:linear-gradient(140deg,#65502d,#25283a)}.game:nth-child(4){background:linear-gradient(140deg,#31554e,#20283c)}.game:nth-child(5){background:linear-gradient(140deg,#493d70,#20283c)}.game:nth-child(6){background:linear-gradient(140deg,#6b3e32,#20283c)}.game .art{font-size:33px;display:block;text-shadow:0 4px 8px #0008}.game strong{position:absolute;bottom:8px;left:8px;font-size:10px}.game small{position:absolute;right:7px;top:7px;color:#ffe29b;font-size:8px}
+.promo{border:1px solid #80623d;background:linear-gradient(110deg,#563c25,#29273a);border-radius:11px;padding:12px;display:flex;align-items:center;gap:11px}.promo .icon{font-size:32px}.promo strong{font-size:12px;color:#ffe09a}.promo p{font-size:9px;color:#ded4c5;line-height:1.5;margin:4px 0 0}
+.matches{display:grid;gap:8px}.match{border:1px solid var(--line);border-radius:10px;background:var(--panel);padding:11px}.match .meta{font-size:9px;color:var(--gold);margin-bottom:8px}.match .teams{display:flex;justify-content:space-between;align-items:center;font-size:11px}.match .teams b{color:#8e9bb0;font-size:9px}.match p{font-size:9px;color:var(--muted);margin:8px 0 0}
+.feature-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.feature{border:1px solid var(--line);background:var(--panel);border-radius:9px;padding:11px}.feature b{font-size:18px;color:var(--gold)}.feature strong{display:block;font-size:10px;margin:6px 0}.feature p{font-size:9px;color:var(--muted);line-height:1.5;margin:0}
+.app-promo{padding:14px;border:1px solid #3a4c68;border-radius:11px;background:linear-gradient(120deg,#243c58,#202033);display:flex;gap:12px;align-items:center}.app-promo .phone{font-size:43px}.app-promo strong{font-size:12px}.app-promo p{font-size:9px;color:#c5cedb;line-height:1.5}.app-promo .btn{font-size:9px}
+.spin{display:flex;align-items:center;gap:13px;border-radius:11px;padding:13px;background:linear-gradient(110deg,#47301f,#29243a);border:1px solid #86633d}.spin .wheel{font-size:44px}.spin strong{font-size:12px;color:#ffdf91}.spin p{font-size:9px;color:#d8cdbb;line-height:1.5;margin:4px 0}
+.vip{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.vip div{border:1px solid var(--line);background:var(--panel);border-radius:9px;padding:10px 7px;text-align:center}.vip b{font-size:10px;color:var(--gold)}.vip p{font-size:8px;line-height:1.5;color:var(--muted)}
+.providers{display:flex;flex-wrap:wrap;gap:7px}.providers span{font-size:9px;color:#d4dbe6;border:1px solid var(--line);background:#151e2d;border-radius:6px;padding:7px 9px}
+.disclaimer{font-size:9px;color:#8996a9;line-height:1.6;margin:17px 2px}.bottom{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(100%,480px);display:grid;grid-template-columns:repeat(5,1fr);background:#111a28;border-top:1px solid var(--line);padding:8px 2px calc(8px + env(safe-area-inset-bottom));z-index:11}.bottom a{text-align:center;color:#aab5c6;text-decoration:none;font-size:9px}.bottom b{display:block;font-size:18px;margin-bottom:3px}.bottom a:first-child{color:var(--gold)}
+@media(min-width:500px){body{padding:16px 0}.app{border:1px solid #303d52;border-radius:15px;overflow:hidden}}
+</style>
+</head>
 <body><div class="app">
-<header class="top"><div class="logo">SM <span>333</span></div><div class="top-actions"><button class="btn" onclick="demo('লগইন')">লগইন</button><button class="btn gold" onclick="demo('রেজিস্টার')">রেজিস্টার</button></div></header>
+<div class="ticker"><span>✨ SM 333 ডেমো লবি　　🎮 নতুন গেম দেখুন　　🏆 স্পোর্টস সেন্টার　　🎁 বিশেষ আয়োজন　　✨ SM 333 ডেমো লবি　　</span></div>
+<header><div class="logo">SM <span>333</span></div><div class="actions"><button class="btn" onclick="demo('লগইন')">লগইন</button><button class="btn gold" onclick="demo('রেজিস্টার')">রেজিস্টার</button></div></header>
 <main>
-<section class="hero"><div class="tag">WELCOME TO SM 333</div><h1>গেমিং লবিতে স্বাগতম</h1><p>আপনার পছন্দের বিনোদন খুঁজে নিন এক জায়গায়</p><div class="dots"><i></i><i></i><i></i></div></section>
-<section class="quick"><button onclick="demo('গেম ক্যাটাগরি')"><b>▦</b>সব গেম</button><button onclick="demo('নতুন গেম')"><b>✦</b>নতুন গেম</button><button onclick="demo('ফেভারিট')"><b>♡</b>ফেভারিট</button></section>
-<section class="wallet"><div><small>আপনার ডেমো পয়েন্ট</small><strong>৳ 1,250.00</strong></div><button class="btn" onclick="demo('পয়েন্ট')">বিস্তারিত</button></section>
-<div class="tabs"><button class="active">সব</button><button>জনপ্রিয়</button><button>স্লট ডেমো</button><button>কার্ড</button><button>আর্কেড</button><button>পাজল</button></div>
-<div class="head"><h2>🔥 জনপ্রিয় গেম</h2><a href="#allgames">সব দেখুন ›</a></div>
-<section class="gamegrid" id="allgames">
-<div class="game"><span class="emoji">🎰</span><strong>Slot Fun</strong><small>ডেমো</small></div>
-<div class="game"><span class="emoji">🐉</span><strong>Dragon Quest</strong><small>ডেমো</small></div>
-<div class="game"><span class="emoji">🐠</span><strong>Ocean Adventure</strong><small>ডেমো</small></div>
-<div class="game"><span class="emoji">🃏</span><strong>Card Master</strong><small>ডেমো</small></div>
-<div class="game"><span class="emoji">🎡</span><strong>Lucky Wheel</strong><small>ডেমো</small></div>
-<div class="game"><span class="emoji">🧩</span><strong>Puzzle Quest</strong><small>ডেমো</small></div>
+<section class="hero"><div class="eyebrow">WELCOME TO SM 333</div><h1>বিনোদনের নতুন জগতে স্বাগতম</h1><p>গেম, স্পোর্টস ও মজার ডেমো অভিজ্ঞতা এক জায়গায়</p><button class="btn gold" onclick="document.querySelector('#games').scrollIntoView()">গেম দেখুন</button><div class="dots"><i></i><i></i><i></i></div></section>
+<section class="quick"><button onclick="go('games')"><b>▦</b>সব গেম</button><button onclick="go('sports')"><b>🏆</b>স্পোর্টস</button><button onclick="go('offers')"><b>🎁</b>অফার</button><button onclick="go('app')"><b>📱</b>অ্যাপ</button></section>
+<section class="wallet"><div><small>ডেমো পয়েন্ট ব্যালেন্স</small><strong>1,250 পয়েন্ট</strong></div><button class="btn" onclick="demo('ডেমো পয়েন্ট')">বিস্তারিত</button></section>
+<div class="section-head"><h2>🎮 গেম ক্যাটাগরি</h2><a href="#games">সব দেখুন ›</a></div>
+<div class="category"><button class="active">সব</button><button>জনপ্রিয়</button><button>স্লট ডেমো</button><button>কার্ড</button><button>ফিশিং</button><button>পাজল</button></div>
+<div class="section-head"><h2>🔥 জনপ্রিয় গেম</h2><a href="#games">আরও ›</a></div>
+<section class="games" id="games">
+<div class="game"><span class="art">🎰</span><strong>Slot Fun</strong><small>DEMO</small></div>
+<div class="game"><span class="art">🐉</span><strong>Dragon Quest</strong><small>DEMO</small></div>
+<div class="game"><span class="art">🐠</span><strong>Ocean Play</strong><small>DEMO</small></div>
+<div class="game"><span class="art">🃏</span><strong>Card Master</strong><small>DEMO</small></div>
+<div class="game"><span class="art">🎡</span><strong>Lucky Wheel</strong><small>DEMO</small></div>
+<div class="game"><span class="art">🧩</span><strong>Puzzle Quest</strong><small>DEMO</small></div>
 </section>
-<div class="head"><h2>🎁 বিশেষ আয়োজন</h2><a href="#offer">আরও ›</a></div>
-<section class="promo" id="offer"><div class="gift">🎁</div><div><strong>SM 333 ডেমো বোনাস</strong><p>শুধু পরীক্ষামূলক পয়েন্ট ও UI প্রদর্শন। কোনো অর্থমূল্য নেই।</p></div></section>
-<div class="head"><h2>🏏 স্পোর্টস সেন্টার</h2><a href="#sports">সব ›</a></div>
-<section class="sports" id="sports"><div class="match"><div class="league">ক্রিকেট • নমুনা ম্যাচ</div><div class="teams"><span>বাংলাদেশ</span><b>VS</b><span>ভারত</span></div></div><div class="match"><div class="league">ফুটবল • নমুনা ম্যাচ</div><div class="teams"><span>ঢাকা FC</span><b>VS</b><span>চট্টগ্রাম FC</span></div></div></section>
-<p class="disclaimer">এটি কেবল একটি অ-আর্থিক UI ডেমো। এখানে বাস্তব টাকা, বাজি, ডিপোজিট, উত্তোলন বা অর্থমূল্যের পুরস্কার নেই। প্রদর্শিত পয়েন্ট ও ম্যাচের তথ্য কাল্পনিক।</p>
+<div class="section-head" id="offers"><h2>🎁 বিশেষ আয়োজন</h2><a href="#offers">বিস্তারিত ›</a></div>
+<section class="promo"><div class="icon">🎁</div><div><strong>SM 333 স্পেশাল ডেমো</strong><p>নতুন ডিজাইন ও ফিচারগুলো পরীক্ষা করে দেখুন। এখানে কোনো আর্থিক পুরস্কার নেই।</p></div></section>
+<div class="section-head" id="sports"><h2>🏏 স্পোর্টস সেন্টার</h2><a href="#sports">সব দেখুন ›</a></div>
+<section class="matches">
+<div class="match"><div class="meta">ক্রিকেট • নমুনা ম্যাচ</div><div class="teams"><span>বাংলাদেশ</span><b>VS</b><span>ভারত</span></div><p>শুধু প্রদর্শনের জন্য কাল্পনিক ম্যাচের তথ্য</p></div>
+<div class="match"><div class="meta">ফুটবল • নমুনা ম্যাচ</div><div class="teams"><span>ঢাকা FC</span><b>VS</b><span>চট্টগ্রাম FC</span></div><p>শুধু প্রদর্শনের জন্য কাল্পনিক ম্যাচের তথ্য</p></div>
+</section>
+<div class="section-head"><h2>⭐ SM 333 ফিচার</h2></div>
+<section class="feature-grid">
+<div class="feature"><b>⚡</b><strong>দ্রুত লোডিং</strong><p>মোবাইল স্ক্রিনে সহজে ব্যবহারের উপযোগী ডিজাইন।</p></div>
+<div class="feature"><b>🌐</b><strong>বাংলা ইন্টারফেস</strong><p>সহজ বাংলা ভাষায় নেভিগেশন ও মেনু।</p></div>
+<div class="feature"><b>🎮</b><strong>গেম লবি</strong><p>বিভিন্ন ধরনের অ-আর্থিক গেম ডেমো।</p></div>
+<div class="feature"><b>🛡️</b><strong>ডেমো পরিবেশ</strong><p>বাস্তব লেনদেন ছাড়াই ইন্টারফেস পরীক্ষা।</p></div>
+</section>
+<div class="section-head" id="app"><h2>📱 SM 333 মোবাইল অভিজ্ঞতা</h2></div>
+<section class="app-promo"><div class="phone">📲</div><div><strong>মোবাইলে ব্যবহার করুন</strong><p>আপনার ফোনের ব্রাউজারেই SM 333 ডেমো খুলুন।</p><button class="btn" onclick="demo('মোবাইল ডেমো')">দেখুন</button></div></section>
+<div class="section-head"><h2>🎡 লাকি স্পিন ডেমো</h2></div>
+<section class="spin"><div class="wheel">🎡</div><div><strong>স্পিন UI পরীক্ষা</strong><p>শুধু অ্যানিমেশন ও ডিজাইন ডেমো। কোনো টাকা বা পুরস্কার দেওয়া হয় না।</p><button class="btn gold" onclick="demo('স্পিন ডেমো')">দেখুন</button></div></section>
+<div class="section-head"><h2>👑 সদস্য স্তর</h2></div>
+<section class="vip"><div><b>BRONZE</b><p>সাধারণ ডেমো প্রোফাইল</p></div><div><b>SILVER</b><p>অতিরিক্ত UI থিম</p></div><div><b>GOLD</b><p>প্রিমিয়াম ডেমো থিম</p></div></section>
+<div class="section-head"><h2>🤝 গেম স্টাইল</h2></div>
+<div class="providers"><span>Arcade</span><span>Puzzle</span><span>Card</span><span>Adventure</span><span>Wheel</span><span>Slots Demo</span></div>
+<p class="disclaimer">SM 333 এটি একটি অ-আর্থিক বিনোদনমূলক UI ডেমো। বাস্তব টাকা, বাজি, ডিপোজিট, উত্তোলন, ক্যাসিনো লেনদেন বা অর্থমূল্যের পুরস্কার নেই। ম্যাচ, পয়েন্ট ও গেমের তথ্য কাল্পনিক।</p>
 </main>
-<nav class="bottom"><a href="#"><b>⌂</b>হোম</a><a href="#allgames"><b>▦</b>গেম</a><a href="#offer"><b>🎁</b>অফার</a><a href="#sports"><b>🏆</b>স্পোর্টস</a><a href="#"><b>👤</b>আমার</a></nav>
-</div><script>function demo(x){alert(x+' — এটি এখনো শুধু ডেমো।')}</script></body></html>
+<nav class="bottom"><a href="#"><b>⌂</b>হোম</a><a href="#games"><b>▦</b>গেম</a><a href="#offers"><b>🎁</b>অফার</a><a href="#sports"><b>🏆</b>স্পোর্টস</a><a href="#" onclick="demo('আমার')"><b>👤</b>আমার</a></nav>
+</div>
+<script>function demo(x){alert(x+' — এই সুবিধাটি বর্তমানে শুধু UI ডেমো।')}function go(id){document.getElementById(id).scrollIntoView({behavior:'smooth'})}</script>
+</body></html>
