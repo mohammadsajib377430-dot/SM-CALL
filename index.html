@@ -738,16 +738,52 @@ async function showHome() {
   showScreen("homeScreen");
 }
 
+// LOCAL DEMO DATA — stored only in this browser on this device.
+function getDemoChats() {
+  try {
+    return JSON.parse(localStorage.getItem("smCallDemoChats") || "[]");
+  } catch (error) {
+    return [];
+  }
+}
+
+function saveDemoChats(chats) {
+  localStorage.setItem("smCallDemoChats", JSON.stringify(chats));
+}
+
 // PERSONAL CHAT
 async function startPersonalChat() {
   if (!currentUser) return;
-  if (demoMode) {
-    alert("ডেমো মোডে বাস্তব বন্ধু-চ্যাট চালু নেই। এটি পরের ধাপে যুক্ত হবে।");
-    return;
-  }
 
   const friendUID = document.getElementById("friendUID")
     .value.trim();
+
+  if (demoMode) {
+    if (!friendUID) {
+      alert("ডেমো চ্যাটের জন্য বন্ধুর Demo ID লিখুন।");
+      return;
+    }
+    if (friendUID === currentUser.uid) {
+      alert("নিজের Demo ID দিয়ে চ্যাট শুরু করা যাবে না।");
+      return;
+    }
+    const chats = getDemoChats();
+    let chat = chats.find(c => c.type === "personal" &&
+      c.members.includes(currentUser.uid) && c.members.includes(friendUID));
+    if (!chat) {
+      chat = {
+        id: "demo-chat-" + Date.now().toString(36),
+        type: "personal",
+        name: "Demo Friend",
+        members: [currentUser.uid, friendUID],
+        messages: []
+      };
+      chats.push(chat);
+      saveDemoChats(chats);
+    }
+    openChat(chat.id, chat.name);
+    return;
+  }
 
   if (!friendUID || friendUID === currentUser.uid) {
     alert("সঠিক বন্ধুর User ID লিখুন।");
@@ -793,11 +829,6 @@ async function startPersonalChat() {
 // CREATE GROUP
 async function createGroupChat() {
   if (!currentUser) return;
-  if (demoMode) {
-    document.getElementById("groupStatus").textContent =
-      "ডেমো মোডে অনলাইন গ্রুপ তৈরি এখনো চালু হয়নি।";
-    return;
-  }
 
   const name = document.getElementById("groupName")
     .value.trim();
@@ -821,6 +852,23 @@ async function createGroupChat() {
   }
 
   members.push(currentUser.uid);
+
+  if (demoMode) {
+    const group = {
+      id: "demo-group-" + Date.now().toString(36),
+      name: name,
+      members: [...new Set(members)],
+      type: "group",
+      messages: []
+    };
+    const chats = getDemoChats();
+    chats.push(group);
+    saveDemoChats(chats);
+    document.getElementById("groupStatus").textContent =
+      "এই ফোনের ব্রাউজারে ডেমো গ্রুপ তৈরি হয়েছে।";
+    openChat(group.id, name);
+    return;
+  }
 
   try {
     const group = await db.collection("chats").add({
@@ -854,6 +902,29 @@ function openChat(chatId, title) {
 // LOAD MESSAGES
 function loadMessages() {
   if (!currentChatId) return;
+
+  if (demoMode) {
+    const chat = getDemoChats().find(c => c.id === currentChatId);
+    const box = document.getElementById("messages");
+    box.innerHTML = "";
+    if (!chat || !chat.messages || chat.messages.length === 0) {
+      box.textContent = "এখনো কোনো মেসেজ নেই। প্রথম মেসেজটি লিখুন।";
+      return;
+    }
+    chat.messages.forEach(message => {
+      const item = document.createElement("div");
+      item.className = "message";
+      const sender = document.createElement("small");
+      sender.textContent = message.sender === currentUser.uid ? "আপনি (ডেমো)" : "বন্ধু (ডেমো)";
+      const content = document.createElement("div");
+      content.textContent = message.text;
+      item.appendChild(sender);
+      item.appendChild(content);
+      box.appendChild(item);
+    });
+    box.scrollTop = box.scrollHeight;
+    return;
+  }
 
   if (unsubscribeMessages) {
     unsubscribeMessages();
@@ -898,15 +969,30 @@ function loadMessages() {
 // SEND MESSAGE
 async function sendMessage() {
   if (!currentUser || !currentChatId) return;
-  if (demoMode) {
-    alert("ডেমো মোডে মেসেজ পাঠানো/সিঙ্ক চালু নেই।");
-    return;
-  }
 
   const input = document.getElementById("messageInput");
   const text = input.value.trim();
 
   if (!text) return;
+
+  if (demoMode) {
+    const chats = getDemoChats();
+    const chat = chats.find(c => c.id === currentChatId);
+    if (!chat) {
+      alert("ডেমো চ্যাটটি পাওয়া যায়নি।");
+      return;
+    }
+    chat.messages = chat.messages || [];
+    chat.messages.push({
+      text: text,
+      sender: currentUser.uid,
+      createdAt: Date.now()
+    });
+    saveDemoChats(chats);
+    input.value = "";
+    loadMessages();
+    return;
+  }
 
   try {
     await db.collection("chats")
@@ -932,8 +1018,19 @@ async function loadChatList() {
   const list = document.getElementById("chatList");
 
   if (demoMode) {
-    list.textContent =
-      "আপনি Local Demo ব্যবহার করছেন। অনলাইন চ্যাট ও বন্ধুদের তালিকা পরের ধাপে যুক্ত হবে।";
+    const chats = getDemoChats().filter(c => c.members.includes(currentUser.uid));
+    list.innerHTML = "";
+    if (chats.length === 0) {
+      list.textContent = "এখনো কোনো ডেমো চ্যাট নেই। নতুন গ্রুপ তৈরি করতে পারেন।";
+      return;
+    }
+    chats.forEach(chat => {
+      const button = document.createElement("button");
+      button.className = "secondary";
+      button.textContent = chat.name || "ডেমো চ্যাট";
+      button.onclick = () => openChat(chat.id, button.textContent);
+      list.appendChild(button);
+    });
     return;
   }
 
