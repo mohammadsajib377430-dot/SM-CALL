@@ -874,33 +874,28 @@ async function startPersonalChat() {
       return;
     }
 
+    // Use one deterministic document ID for this pair, so both phones
+    // always open the exact same personal chat, even if they start it
+    // at nearly the same time.
     const members = [currentUser.uid, friendUID].sort();
+    const chatId = "personal_" + members.join("_");
+    const chatRef = db.collection("chats").doc(chatId);
+    const chatDoc = await chatRef.get();
 
-    // Query only chats containing the signed-in user so Firestore
-    // Security Rules can verify membership; then match the exact pair locally.
-    const existing = await db.collection("chats")
-      .where("members", "array-contains", currentUser.uid)
-      .get();
-
-    const matchingChat = existing.docs.find(doc => {
-      const chatMembers = doc.data().members || [];
-      return doc.data().type === "personal"
-        && chatMembers.length === 2
-        && chatMembers.includes(friendUID);
-    });
-
-    let chatId;
-
-    if (matchingChat) {
-      chatId = matchingChat.id;
-    } else {
-      const chat = await db.collection("chats").add({
+    if (!chatDoc.exists) {
+      await chatRef.set({
         members: members,
         type: "personal",
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
-
-      chatId = chat.id;
+    } else {
+      const savedMembers = chatDoc.data().members || [];
+      if (chatDoc.data().type !== "personal"
+          || savedMembers.length !== 2
+          || !savedMembers.includes(currentUser.uid)
+          || !savedMembers.includes(friendUID)) {
+        throw new Error("এই ব্যক্তিগত চ্যাটের সদস্য তালিকা মিলছে না।");
+      }
     }
 
     openChat(chatId, friend.data().name || "বন্ধু");
