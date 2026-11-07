@@ -876,14 +876,23 @@ async function startPersonalChat() {
 
     const members = [currentUser.uid, friendUID].sort();
 
+    // Query only chats containing the signed-in user so Firestore
+    // Security Rules can verify membership; then match the exact pair locally.
     const existing = await db.collection("chats")
-      .where("members", "==", members)
+      .where("members", "array-contains", currentUser.uid)
       .get();
+
+    const matchingChat = existing.docs.find(doc => {
+      const chatMembers = doc.data().members || [];
+      return doc.data().type === "personal"
+        && chatMembers.length === 2
+        && chatMembers.includes(friendUID);
+    });
 
     let chatId;
 
-    if (!existing.empty) {
-      chatId = existing.docs[0].id;
+    if (matchingChat) {
+      chatId = matchingChat.id;
     } else {
       const chat = await db.collection("chats").add({
         members: members,
