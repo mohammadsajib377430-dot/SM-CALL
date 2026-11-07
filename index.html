@@ -376,7 +376,7 @@ p {
     <button onclick="showScreen('chatsScreen')">
       <span>💬</span>Chats
     </button>
-    <button onclick="showScreen('profileScreen')">
+    <button onclick="openProfile()">
       <span>👤</span>Profile
     </button>
   </div>
@@ -739,6 +739,39 @@ async function saveUserProfile() {
     phone: currentUser.phoneNumber || "",
     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
   }, { merge: true });
+}
+
+// PROFILE — refresh account details whenever the profile tab opens.
+async function openProfile() {
+  if (!currentUser) {
+    showScreen("loginScreen");
+    return;
+  }
+
+  const nameEl = document.getElementById("profileName");
+  const phoneEl = document.getElementById("profilePhone");
+  const uidEl = document.getElementById("profileUID");
+
+  nameEl.textContent = demoMode
+    ? (demoProfileName || "SM CALL Demo")
+    : "লোড হচ্ছে...";
+  phoneEl.textContent = demoMode
+    ? "ডেমো অ্যাকাউন্ট — ফোন নম্বর যাচাই হয়নি"
+    : (currentUser.phoneNumber || "ফোন নম্বর যুক্ত নেই");
+  uidEl.textContent = (demoMode ? "Demo ID: " : "User ID: ") + currentUser.uid;
+
+  showScreen("profileScreen");
+
+  if (!demoMode) {
+    try {
+      const doc = await db.collection("users").doc(currentUser.uid).get();
+      const data = doc.exists ? doc.data() : {};
+      nameEl.textContent = data.name || "SM CALL User";
+    } catch (error) {
+      nameEl.textContent = "নাম লোড হয়নি";
+      phoneEl.textContent = "প্রোফাইল লোড সমস্যা: " + error.message;
+    }
+  }
 }
 
 // HOME
