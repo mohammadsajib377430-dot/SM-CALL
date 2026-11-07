@@ -1,52 +1,77 @@
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
+
     function signedIn() {
       return request.auth != null;
     }
 
+    function chatExists(chatId) {
+      return exists(/databases/$(database)/documents/chats/$(chatId));
+    }
+
     function isChatMember(chatId) {
       return signedIn()
-        && exists(/databases/$(database)/documents/chats/$(chatId))
-        && request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.members;
+        && chatExists(chatId)
+        && request.auth.uid in
+          get(/databases/$(database)/documents/chats/$(chatId)).data.members;
     }
 
     match /users/{userId} {
-      // Authenticated users may look up a public display profile by exact UID.
-      // Phone numbers must never be stored in this collection.
+      // Exact UID lookup is needed to find a friend; profile list is private.
       allow get: if signedIn();
       allow list: if false;
+
       allow create, update: if signedIn()
         && request.auth.uid == userId
-        && request.resource.data.keys().hasOnly(['uid', 'name', 'updatedAt'])
+        && request.resource.data.keys().hasOnly([
+          'uid', 'name', 'updatedAt'
+        ])
         && request.resource.data.uid == userId
         && request.resource.data.name is string
         && request.resource.data.name.size() > 0
         && request.resource.data.name.size() <= 60
         && request.resource.data.updatedAt is timestamp;
+
       allow delete: if false;
     }
 
     match /privateUsers/{userId} {
-      // Private phone number: only the matching signed-in user can read/write it.
+      // Phone number is readable only by its owner.
       allow get: if signedIn() && request.auth.uid == userId;
       allow list: if false;
+
       allow create, update: if signedIn()
         && request.auth.uid == userId
-        && request.resource.data.keys().hasOnly(['uid', 'phone', 'updatedAt'])
+        && request.resource.data.keys().hasOnly([
+          'uid', 'phone', 'updatedAt'
+        ])
         && request.resource.data.uid == userId
         && request.resource.data.phone is string
         && request.resource.data.phone.size() <= 20
         && request.resource.data.updatedAt is timestamp;
+
       allow delete: if false;
     }
 
     match /chats/{chatId} {
-      allow get, list: if signedIn()
+      // A signed-in user may check whether a not-yet-created chat exists.
+      // If the document exists, only its members may read it.
+      allow get: if signedIn()
+        && (
+          !chatExists(chatId)
+          || request.auth.uid in resource.data.members
+        );
+
+      // Queries must be constrained to chats containing the current user.
+      allow list: if signedIn()
         && request.auth.uid in resource.data.members;
 
       allow create: if signedIn()
-        && request.resource.data.keys().hasOnly(['name', 'members', 'type', 'createdAt'])
+        && request.resource.data.keys().hasOnly([
+          'name', 'members', 'type', 'createdAt'
+        ])
         && request.resource.data.members is list
         && request.resource.data.members.size() >= 2
         && request.resource.data.members.size() <= 20
@@ -67,18 +92,22 @@ service cloud.firestore {
           )
         );
 
-      // Membership changes need a separate invitation/leave flow.
+      // Membership changes are disabled until a secure invite/leave flow exists.
       allow update, delete: if false;
 
       match /messages/{messageId} {
         allow get, list: if isChatMember(chatId);
+
         allow create: if isChatMember(chatId)
-          && request.resource.data.keys().hasOnly(['sender', 'text', 'createdAt'])
+          && request.resource.data.keys().hasOnly([
+            'sender', 'text', 'createdAt'
+          ])
           && request.resource.data.sender == request.auth.uid
           && request.resource.data.text is string
           && request.resource.data.text.size() > 0
           && request.resource.data.text.size() <= 5000
           && request.resource.data.createdAt is timestamp;
+
         allow update, delete: if false;
       }
     }
