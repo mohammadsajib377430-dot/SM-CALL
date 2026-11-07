@@ -274,9 +274,12 @@ p {
       <input id="demoName" class="input" type="text" maxlength="60"
         placeholder="ডেমো নাম লিখুন">
       <button class="secondary" onclick="demoLogin()">
-        ডেমো অ্যাকাউন্ট দিয়ে প্রবেশ
+        লোকাল ডেমো অ্যাকাউন্ট
       </button>
-      <p class="status">ডেমো অ্যাকাউন্টে ফোন নম্বর যাচাই হবে না।</p>
+      <button class="primary" style="margin-top:10px" onclick="onlineDemoLogin()">
+        বিনামূল্যে Online Demo চালু করুন
+      </button>
+      <p class="status">লোকাল ডেমো শুধু এই ফোনে কাজ করে। Online Demo দিয়ে Firebase-এ সংযোগ করে অন্য ফোনের সঙ্গে চ্যাট করা যাবে; ফোন নম্বর/OTP লাগবে না।</p>
     </div>
 
     <p class="link" onclick="showScreen('signupScreen')">
@@ -549,6 +552,43 @@ function setupCaptcha(containerId) {
   );
 
   return recaptchaVerifier.render();
+}
+
+// FREE ONLINE DEMO — uses Firebase Anonymous Authentication (no SMS/OTP).
+// Firebase Console must have Authentication > Sign-in method > Anonymous enabled.
+async function onlineDemoLogin() {
+  const name = document.getElementById("demoName").value.trim();
+
+  if (!name) {
+    document.getElementById("loginStatus").textContent =
+      "Online Demo ব্যবহারের জন্য আপনার নাম লিখুন।";
+    return;
+  }
+
+  if (name.length > 60) {
+    document.getElementById("loginStatus").textContent =
+      "নাম ৬০ অক্ষরের মধ্যে লিখুন।";
+    return;
+  }
+
+  const status = document.getElementById("loginStatus");
+  status.textContent = "Online Demo সংযোগ হচ্ছে...";
+
+  try {
+    const credential = await auth.signInAnonymously();
+    currentUser = credential.user;
+    demoMode = false;
+    demoProfileName = name;
+    signupMode = true;
+    await saveUserProfile();
+    signupMode = false;
+    await showHome();
+  } catch (error) {
+    signupMode = false;
+    status.textContent =
+      "Online Demo চালু হয়নি: " + error.message +
+      " | Firebase Console-এ Authentication > Sign-in method থেকে Anonymous চালু করতে হবে।";
+  }
 }
 
 // LOCAL FREE DEMO LOGIN — works without Firebase Authentication or billing.
