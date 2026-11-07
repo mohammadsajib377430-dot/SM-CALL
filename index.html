@@ -572,7 +572,11 @@ async function sendOTP(mode) {
       ? "signupCaptcha"
       : "loginCaptcha";
 
+    status.textContent = "reCAPTCHA লোড হচ্ছে...";
+
     await setupCaptcha(captchaId);
+
+    status.textContent = "reCAPTCHA-এর 'I'm not a robot' বক্সে টিক দিন। যাচাই শেষ হলে SMS OTP পাঠানো হবে...";
 
     confirmationResult = await auth.signInWithPhoneNumber(
       phone,
