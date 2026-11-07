@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#101018">
+<title>SM 333 — Game Lounge Demo</title>
+<style>
+:root{--bg:#101018;--panel:#1b1b27;--gold:#f3c45b;--muted:#a9a7b5;--line:#333141}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 50% -10%,#39301e 0,#17151c 38%,var(--bg) 75%);color:#fff;font-family:Arial,"Noto Sans Bengali",sans-serif;padding-bottom:78px}
+.wrap{max-width:480px;margin:auto;min-height:100vh}
+header{padding:17px 16px 13px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #ffffff12}
+.brand{font-size:25px;font-weight:900;letter-spacing:1px;color:var(--gold)}.brand span{color:#fff}
+.actions{display:flex;gap:8px}.btn{border:1px solid var(--gold);background:transparent;color:var(--gold);padding:9px 12px;border-radius:9px;font-weight:700}.btn.primary{background:linear-gradient(135deg,#f6d77e,#c58b2c);color:#211708;border:0}
+main{padding:15px}.welcome{padding:18px;border:1px solid #8b6c344d;border-radius:16px;background:linear-gradient(120deg,#302719,#211e27);box-shadow:0 10px 30px #0005}
+.welcome small{color:#d6bd83}.welcome h1{font-size:23px;margin:8px 0}.welcome p{font-size:13px;color:#c7c1b4;line-height:1.6;margin:0}
+.balance{margin-top:14px;background:#11101899;border:1px solid #ffffff16;border-radius:12px;padding:12px;display:flex;justify-content:space-between;align-items:center}.balance strong{color:var(--gold);font-size:20px}
+.section-head{display:flex;align-items:center;justify-content:space-between;margin:22px 2px 12px}.section-head h2{font-size:17px;margin:0}.section-head a{color:var(--gold);font-size:12px;text-decoration:none}
+.categories{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}.cat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:13px 4px;text-align:center;font-size:12px;color:#eee}.cat b{display:block;font-size:22px;margin-bottom:7px}
+.promo{margin-top:16px;padding:15px;border-radius:14px;background:linear-gradient(110deg,#49351c,#29212a);border:1px solid #a47b3b66}.promo strong{color:#ffdb8a}.promo p{margin:6px 0 0;color:#d0c7b8;font-size:12px;line-height:1.5}
+.games{display:grid;grid-template-columns:repeat(2,1fr);gap:11px}.game{min-height:112px;border:1px solid var(--line);border-radius:14px;padding:14px;background:linear-gradient(145deg,#292735,#191923);display:flex;flex-direction:column;justify-content:space-between}.game .emoji{font-size:30px}.game strong{font-size:14px}.game small{color:var(--muted);margin-top:4px}
+.notice{font-size:11px;color:#aaa6b3;line-height:1.6;margin:18px 2px 4px}
+nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(100%,480px);display:grid;grid-template-columns:repeat(4,1fr);background:#171620;border-top:1px solid var(--line);padding:10px 5px calc(10px + env(safe-area-inset-bottom));z-index:5}
+nav a{text-decoration:none;color:#aaa;text-align:center;font-size:11px}nav b{display:block;font-size:19px;margin-bottom:4px}nav a:first-child{color:var(--gold)}
+@media(min-width:500px){body{padding-top:20px}.wrap{border:1px solid #ffffff18;border-radius:20px;overflow:hidden}}
+</style>
+</head>
+<body><div class="wrap">
+<header><div class="brand">SM <span>333</span></div><div class="actions"><button class="btn" onclick="alert('এটি শুধু UI ডেমো।')">লগইন</button><button class="btn primary" onclick="alert('এটি শুধু UI ডেমো।')">রেজিস্টার</button></div></header>
+<main>
+<section class="welcome"><small>স্বাগতম — SM 333 Game Lounge</small><h1>আপনার বিনোদনের নতুন জায়গা</h1><p>পছন্দের গেম বেছে নিন, খেলুন এবং মজার সময় কাটান।</p><div class="balance"><div><small>ডেমো পয়েন্ট</small><br><strong>1,250 পয়েন্ট</strong></div><span>★</span></div></section>
+<div class="section-head"><h2>গেম ক্যাটাগরি</h2><a href="#games">সব দেখুন →</a></div>
+<section class="categories"><div class="cat"><b>🎯</b>আর্কেড</div><div class="cat"><b>🧩</b>পাজল</div><div class="cat"><b>🃏</b>কার্ড</div><div class="cat"><b>🏆</b>চ্যালেঞ্জ</div></section>
+<section class="promo"><strong>✨ আজকের বিশেষ আয়োজন</strong><p>নতুন গেম আবিষ্কার করুন এবং ডেমো পয়েন্ট দিয়ে বিনোদন উপভোগ করুন।</p></section>
+<div class="section-head" id="games"><h2>জনপ্রিয় গেম</h2><a href="#games">আরও →</a></div>
+<section class="games"><article class="game"><span class="emoji">🎡</span><div><strong>Lucky Wheel</strong><br><small>স্পিন ডেমো</small></div></article><article class="game"><span class="emoji">🧩</span><div><strong>Puzzle Challenge</strong><br><small>বুদ্ধির খেলা</small></div></article><article class="game"><span class="emoji">🃏</span><div><strong>Card Match</strong><br><small>ম্যাচিং গেম</small></div></article><article class="game"><span class="emoji">🚀</span><div><strong>Space Run</strong><br><small>আর্কেড ডেমো</small></div></article></section>
+<p class="notice">এটি কেবল একটি নকশা/ইন্টারফেস ডেমো। এখানে কোনো বাস্তব টাকা, বাজি, ডিপোজিট বা উত্তোলন নেই; পয়েন্টগুলো কাল্পনিক।</p>
+</main>
+<nav><a href="#"><b>⌂</b>হোম</a><a href="#games"><b>🎮</b>গেম</a><a href="#"><b>🎁</b>অফার</a><a href="#"><b>👤</b>প্রোফাইল</a></nav>
+</div></body></html>
