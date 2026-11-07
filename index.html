@@ -726,12 +726,13 @@ async function saveUserProfile() {
     name = signupName || demoName || "SM CALL Demo";
   }
 
+  // Replace the public profile document so it contains only safe public fields.
+  // Phone numbers are stored separately in /privateUsers/{uid}.
   await userRef.set({
     uid: uid,
     name: name,
-    phone: firebase.firestore.FieldValue.delete(),
     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-  }, { merge: true });
+  });
 
   // Keep phone numbers in a private document readable only by its owner.
   await db.collection("privateUsers").doc(uid).set({
@@ -865,6 +866,7 @@ async function startPersonalChat() {
     return;
   }
 
+  let stage = "বন্ধুর প্রোফাইল খোঁজা";
   try {
     const friend = await db.collection("users")
       .doc(friendUID).get();
@@ -874,15 +876,18 @@ async function startPersonalChat() {
       return;
     }
 
-    // Use one deterministic document ID for this pair, so both phones
-    // always open the exact same personal chat, even if they start it
-    // at nearly the same time.
+    // Both users calculate exactly the same chat document ID.
     const members = [currentUser.uid, friendUID].sort();
     const chatId = "personal_" + members.join("_");
     const chatRef = db.collection("chats").doc(chatId);
+
+    // Firestore Rules allow a signed-in user to check a missing chat
+    // document, but only members can read an existing chat document.
+    stage = "চ্যাট ডকুমেন্ট পরীক্ষা";
     const chatDoc = await chatRef.get();
 
     if (!chatDoc.exists) {
+      stage = "নতুন ব্যক্তিগত চ্যাট তৈরি";
       await chatRef.set({
         members: members,
         type: "personal",
@@ -894,14 +899,15 @@ async function startPersonalChat() {
           || savedMembers.length !== 2
           || !savedMembers.includes(currentUser.uid)
           || !savedMembers.includes(friendUID)) {
-        throw new Error("এই ব্যক্তিগত চ্যাটের সদস্য তালিকা মিলছে না।");
+        throw new Error("চ্যাটের সদস্য তালিকা সঠিক নয়।");
       }
     }
 
     openChat(chatId, friend.data().name || "বন্ধু");
 
   } catch (error) {
-    alert("চ্যাট তৈরি হয়নি: " + error.message);
+    console.error("Personal chat error:", stage, error);
+    alert(stage + " ব্যর্থ হয়েছে। (" + (error.code || "unknown") + ") " + error.message);
   }
 }
 
