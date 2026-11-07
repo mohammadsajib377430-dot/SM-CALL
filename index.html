@@ -271,8 +271,10 @@ p {
 
     <div style="margin-top:18px;padding-top:16px;border-top:1px solid #31557e">
       <p>OTP ছাড়াই বিনামূল্যে ডেমো ব্যবহার</p>
+      <label for="demoName" style="display:block;margin:12px 0 7px;font-weight:700;color:#ffffff">আপনার ডেমো নাম লিখুন</label>
       <input id="demoName" class="input" type="text" maxlength="60"
-        placeholder="ডেমো নাম লিখুন">
+        placeholder="যেমন: Sajib" autocomplete="nickname"
+        style="display:block;width:100%;min-height:50px;padding:14px;color:#102b55;background:#ffffff;border:2px solid #16c7a0;border-radius:10px;font-size:16px">
       <button class="secondary" onclick="demoLogin()">
         লোকাল ডেমো অ্যাকাউন্ট
       </button>
