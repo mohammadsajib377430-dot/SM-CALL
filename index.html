@@ -269,6 +269,16 @@ p {
       SMS OTP পাঠান
     </button>
 
+    <div style="margin-top:18px;padding-top:16px;border-top:1px solid #31557e">
+      <p>OTP ছাড়াই বিনামূল্যে ডেমো ব্যবহার</p>
+      <input id="demoName" class="input" type="text" maxlength="60"
+        placeholder="ডেমো নাম লিখুন">
+      <button class="secondary" onclick="demoLogin()">
+        ডেমো অ্যাকাউন্ট দিয়ে প্রবেশ
+      </button>
+      <p class="status">ডেমো অ্যাকাউন্টে ফোন নম্বর যাচাই হবে না।</p>
+    </div>
+
     <p class="link" onclick="showScreen('signupScreen')">
       নতুন অ্যাকাউন্ট তৈরি করুন
     </p>
@@ -539,6 +549,36 @@ function setupCaptcha(containerId) {
   return recaptchaVerifier.render();
 }
 
+// FREE DEMO LOGIN (requires Anonymous provider enabled in Firebase Authentication)
+async function demoLogin() {
+  const name = document.getElementById("demoName").value.trim();
+
+  if (!name) {
+    document.getElementById("loginStatus").textContent =
+      "ডেমো ব্যবহারের জন্য আপনার নাম লিখুন।";
+    return;
+  }
+
+  if (name.length > 60) {
+    document.getElementById("loginStatus").textContent =
+      "নাম ৬০ অক্ষরের মধ্যে লিখুন।";
+    return;
+  }
+
+  document.getElementById("loginStatus").textContent =
+    "বিনামূল্যের ডেমো অ্যাকাউন্ট তৈরি হচ্ছে...";
+
+  try {
+    signupMode = true;
+    await auth.signInAnonymously();
+  } catch (error) {
+    signupMode = false;
+    document.getElementById("loginStatus").textContent =
+      "ডেমো লগইন হয়নি: " + error.message +
+      " — Firebase Authentication-এ Anonymous চালু আছে কি না দেখুন।";
+  }
+}
+
 // SEND OTP
 async function sendOTP(mode) {
   const phoneInput = mode === "signup"
@@ -639,7 +679,9 @@ async function saveUserProfile() {
     : "SM CALL User";
 
   if (signupMode) {
-    name = document.getElementById("signupName").value.trim();
+    const signupName = document.getElementById("signupName")?.value.trim();
+    const demoName = document.getElementById("demoName")?.value.trim();
+    name = signupName || demoName || "SM CALL Demo";
   }
 
   await userRef.set({
