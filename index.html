@@ -501,6 +501,8 @@ let confirmationResult = null;
 let recaptchaVerifier = null;
 let currentUser = null;
 let currentChatId = null;
+let demoMode = false;
+let demoProfileName = "";
 let unsubscribeMessages = null;
 let signupMode = false;
 let language = "bn";
@@ -549,7 +551,7 @@ function setupCaptcha(containerId) {
   return recaptchaVerifier.render();
 }
 
-// FREE DEMO LOGIN (requires Anonymous provider enabled in Firebase Authentication)
+// LOCAL FREE DEMO LOGIN — works without Firebase Authentication or billing.
 async function demoLogin() {
   const name = document.getElementById("demoName").value.trim();
 
@@ -565,18 +567,16 @@ async function demoLogin() {
     return;
   }
 
-  document.getElementById("loginStatus").textContent =
-    "বিনামূল্যের ডেমো অ্যাকাউন্ট তৈরি হচ্ছে...";
+  demoMode = true;
+  demoProfileName = name;
+  signupMode = false;
+  currentUser = {
+    uid: "demo-" + Date.now().toString(36),
+    phoneNumber: null
+  };
 
-  try {
-    signupMode = true;
-    await auth.signInAnonymously();
-  } catch (error) {
-    signupMode = false;
-    document.getElementById("loginStatus").textContent =
-      "ডেমো লগইন হয়নি: " + error.message +
-      " — Firebase Authentication-এ Anonymous চালু আছে কি না দেখুন।";
-  }
+  document.getElementById("loginStatus").textContent = "";
+  await showHome();
 }
 
 // SEND OTP
@@ -703,6 +703,18 @@ async function saveUserProfile() {
 async function showHome() {
   if (!currentUser) return;
 
+  if (demoMode) {
+    document.getElementById("userGreeting").textContent =
+      "স্বাগতম, " + demoProfileName + " (ডেমো)";
+    document.getElementById("profileName").textContent = demoProfileName;
+    document.getElementById("profilePhone").textContent =
+      "ডেমো অ্যাকাউন্ট — ফোন নম্বর যাচাই হয়নি";
+    document.getElementById("profileUID").textContent =
+      "Demo ID: " + currentUser.uid;
+    showScreen("homeScreen");
+    return;
+  }
+
   const [doc, privateDoc] = await Promise.all([
     db.collection("users").doc(currentUser.uid).get(),
     db.collection("privateUsers").doc(currentUser.uid).get()
@@ -729,6 +741,10 @@ async function showHome() {
 // PERSONAL CHAT
 async function startPersonalChat() {
   if (!currentUser) return;
+  if (demoMode) {
+    alert("ডেমো মোডে বাস্তব বন্ধু-চ্যাট চালু নেই। এটি পরের ধাপে যুক্ত হবে।");
+    return;
+  }
 
   const friendUID = document.getElementById("friendUID")
     .value.trim();
@@ -777,6 +793,11 @@ async function startPersonalChat() {
 // CREATE GROUP
 async function createGroupChat() {
   if (!currentUser) return;
+  if (demoMode) {
+    document.getElementById("groupStatus").textContent =
+      "ডেমো মোডে অনলাইন গ্রুপ তৈরি এখনো চালু হয়নি।";
+    return;
+  }
 
   const name = document.getElementById("groupName")
     .value.trim();
@@ -877,6 +898,10 @@ function loadMessages() {
 // SEND MESSAGE
 async function sendMessage() {
   if (!currentUser || !currentChatId) return;
+  if (demoMode) {
+    alert("ডেমো মোডে মেসেজ পাঠানো/সিঙ্ক চালু নেই।");
+    return;
+  }
 
   const input = document.getElementById("messageInput");
   const text = input.value.trim();
@@ -905,6 +930,12 @@ async function loadChatList() {
   if (!currentUser) return;
 
   const list = document.getElementById("chatList");
+
+  if (demoMode) {
+    list.textContent =
+      "আপনি Local Demo ব্যবহার করছেন। অনলাইন চ্যাট ও বন্ধুদের তালিকা পরের ধাপে যুক্ত হবে।";
+    return;
+  }
 
   try {
     const snapshot = await db.collection("chats")
@@ -950,6 +981,19 @@ function coming(feature) {
 
 // LOGOUT
 async function logout() {
+  if (demoMode) {
+    demoMode = false;
+    demoProfileName = "";
+    currentUser = null;
+    currentChatId = null;
+    if (unsubscribeMessages) {
+      unsubscribeMessages();
+      unsubscribeMessages = null;
+    }
+    showScreen("loginScreen");
+    return;
+  }
+
   try {
     await auth.signOut();
 
@@ -990,6 +1034,8 @@ function changeLanguage() {
 
 // AUTH STATE
 auth.onAuthStateChanged(async user => {
+  if (demoMode) return;
+
   if (user) {
     currentUser = user;
 
