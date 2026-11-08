@@ -17,6 +17,7 @@ SM CALL is an Android-first communication project. The public GitHub Pages site 
 - Firebase Firestore personal chat and group chat message screens.
 - Personal chat uses a shared chat document based on the two account UIDs.
 - Group creation validates invited account UIDs and limits membership to 20 people including the creator.
+- A language switcher with initial interface labels for Bengali, English, Arabic, and Hindi. This is **partial localization**, not a complete translation of every screen and message.
 - Firestore rules are included in `firestore.rules`; they must be published to the Firebase project for the protections described in the rules to apply.
 
 ## Not implemented / not verified as working
@@ -25,8 +26,14 @@ SM CALL is an Android-first communication project. The public GitHub Pages site 
 - Normal carrier SMS to phone numbers. Firestore chat messages are in-app messages, not SMS delivered to a phone's messaging inbox. Carrier SMS requires an SMS provider and paid usage.
 - One-to-one audio calls and video calls.
 - Group audio/video calls for up to 20 people. These require WebRTC signaling and, for reliable large group calls, an SFU/TURN service and its configuration.
-- Complete Bengali, English, Arabic, and Hindi translation. The current interface is primarily Bengali with limited English labels.
+- Complete Bengali, English, Arabic, and Hindi localization across all screens, validation messages, and chat flows.
 - Native Android application, signed APK/AAB, device-tested release, and Play Store publication.
+
+## Automated prototype checks
+
+GitHub Actions runs `node scripts/validate-prototype.mjs` on pushes to `main` and pull requests. The checks verify embedded JavaScript syntax, required screens, the four language options, the 20-member group limit in both the UI and Firestore rules, the Firebase rules file path, and honest demo/call placeholders.
+
+These are static smoke checks. They do **not** connect to Firebase, deploy Firestore rules, send OTPs, or prove that chat works between real devices.
 
 ## Firebase and security notes
 
