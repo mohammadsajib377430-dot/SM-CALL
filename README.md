@@ -35,6 +35,21 @@ GitHub Actions runs `node scripts/validate-prototype.mjs` on pushes to `main` an
 
 These are static smoke checks. They do **not** connect to Firebase, deploy Firestore rules, send OTPs, or prove that chat works between real devices.
 
+
+## Local Firestore security tests
+
+The repository includes Firestore Rules unit tests in `tests/firestore.rules.test.mjs`. They run against the local Firestore Emulator and do not read or change production Firebase data.
+
+With Node.js 24 installed, run:
+
+```sh
+npm install
+npm run validate
+npx firebase --non-interactive emulators:exec --project demo-sm-call --only firestore "npm run test:rules"
+```
+
+GitHub Actions runs the same checks on pushes to `main` and pull requests. A passing emulator test validates the rules file in this repository; it does **not** publish those rules to the live Firebase project.
+
 ## Firebase and security notes
 
 The web client uses Firebase web configuration values in `index.html`. These are client-side project identifiers, not service-account secrets. Never commit Firebase Admin SDK private keys, service-account JSON files, or provider credentials.
