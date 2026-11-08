@@ -911,66 +911,82 @@ async function startPersonalChat() {
   }
 }
 
-// CREATE GROUP
+// CREATE GROUP — validates member UIDs before creating a shared Firestore group.
 async function createGroupChat() {
   if (!currentUser) return;
 
-  const name = document.getElementById("groupName")
-    .value.trim();
-
+  const status = document.getElementById("groupStatus");
+  const name = document.getElementById("groupName").value.trim();
   const raw = document.getElementById("groupMembers").value;
 
-  const members = [...new Set(
+  let otherMembers = [...new Set(
     raw.split(/[\n,]+/)
       .map(id => id.trim())
       .filter(Boolean)
-  )];
+  )].filter(id => id !== currentUser.uid);
 
   if (!name) {
-    alert("গ্রুপের নাম লিখুন।");
+    status.textContent = "গ্রুপের নাম লিখুন।";
     return;
   }
 
-  if (members.length + 1 > 20) {
-    alert("আপনিসহ সর্বোচ্চ ২০ জন রাখা যাবে।");
+  if (otherMembers.length === 0) {
+    status.textContent = "কমপক্ষে একজন বন্ধুর সঠিক User ID দিন।";
     return;
   }
 
-  members.push(currentUser.uid);
+  if (otherMembers.length + 1 > 20) {
+    status.textContent = "আপনিসহ সর্বোচ্চ ২০ জন রাখা যাবে।";
+    return;
+  }
+
+  const members = [...otherMembers, currentUser.uid];
 
   if (demoMode) {
     const group = {
       id: "demo-group-" + Date.now().toString(36),
       name: name,
-      members: [...new Set(members)],
+      members: members,
       type: "group",
       messages: []
     };
     const chats = getDemoChats();
     chats.push(group);
     saveDemoChats(chats);
-    document.getElementById("groupStatus").textContent =
-      "এই ফোনের ব্রাউজারে ডেমো গ্রুপ তৈরি হয়েছে।";
+    status.textContent =
+      "এই ফোনের ব্রাউজারে শুধু লোকাল ডেমো গ্রুপ তৈরি হয়েছে।";
     openChat(group.id, name);
     return;
   }
 
+  status.textContent = "সদস্যদের User ID যাচাই করা হচ্ছে...";
+
   try {
+    // Confirm every invited account exists before creating the group.
+    for (const uid of otherMembers) {
+      const memberDoc = await db.collection("users").doc(uid).get();
+      if (!memberDoc.exists) {
+        throw new Error("এই User ID পাওয়া যায়নি: " + uid);
+      }
+    }
+
+    status.textContent = "গ্রুপ তৈরি হচ্ছে...";
+
     const group = await db.collection("chats").add({
       name: name,
-      members: [...new Set(members)],
+      members: members,
       type: "group",
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
 
-    document.getElementById("groupStatus").textContent =
-      "গ্রুপ তৈরি হয়েছে!";
-
+    status.textContent = "গ্রুপ তৈরি হয়েছে! মোট সদস্য: " + members.length;
+    document.getElementById("groupName").value = "";
+    document.getElementById("groupMembers").value = "";
     openChat(group.id, name);
 
   } catch (error) {
-    document.getElementById("groupStatus").textContent =
-      "গ্রুপ তৈরি হয়নি: " + error.message;
+    console.error("Group creation error:", error);
+    status.textContent = "গ্রুপ তৈরি হয়নি: " + error.message;
   }
 }
 
