@@ -1211,23 +1211,98 @@ async function logout() {
 }
 
 // LANGUAGE
+const supportedLanguages = ["bn", "en", "ar", "hi"];
+const languageLabels = { bn: "বাংলা", en: "English", ar: "العربية", hi: "हिन्दी" };
+
+function setLanguage(nextLanguage) {
+  language = supportedLanguages.includes(nextLanguage) ? nextLanguage : "bn";
+  const rtl = language === "ar";
+  document.documentElement.lang = language;
+  document.documentElement.dir = rtl ? "rtl" : "ltr";
+  const t = {
+    bn: {
+      welcome: "স্বাগতম SM CALL-এ", intro: "আপনার ফোন নম্বর দিয়ে লগইন করুন।",
+      otp: "SMS OTP পাঠান", demo: "বিনামূল্যে Online Demo চালু করুন",
+      signup: "নতুন অ্যাকাউন্ট তৈরি করুন", audio: "Audio Call",
+      video: "Video Call", messages: "Messages", group: "Group Chat",
+      home: "Home", chats: "Chats", profile: "Profile",
+      personal: "ব্যক্তিগত চ্যাট", friend: "বন্ধুর User ID",
+      start: "চ্যাট শুরু করুন", groupName: "গ্রুপের নাম",
+      createGroup: "গ্রুপ তৈরি করুন", send: "মেসেজ পাঠান",
+      back: "হোমে ফিরে যান"
+    },
+    en: {
+      welcome: "Welcome to SM CALL", intro: "Sign in with your phone number.",
+      otp: "Send SMS OTP", demo: "Start Free Online Demo",
+      signup: "Create a new account", audio: "Audio Call",
+      video: "Video Call", messages: "Messages", group: "Group Chat",
+      home: "Home", chats: "Chats", profile: "Profile",
+      personal: "Personal Chat", friend: "Friend's User ID",
+      start: "Start Chat", groupName: "Group name",
+      createGroup: "Create Group", send: "Send Message",
+      back: "Back to Home"
+    },
+    ar: {
+      welcome: "مرحباً بك في SM CALL", intro: "سجّل الدخول برقم هاتفك.",
+      otp: "إرسال رمز SMS", demo: "ابدأ التجربة المجانية",
+      signup: "إنشاء حساب جديد", audio: "مكالمة صوتية",
+      video: "مكالمة فيديو", messages: "الرسائل", group: "محادثة جماعية",
+      home: "الرئيسية", chats: "المحادثات", profile: "الملف الشخصي",
+      personal: "محادثة شخصية", friend: "معرّف المستخدم للصديق",
+      start: "ابدأ المحادثة", groupName: "اسم المجموعة",
+      createGroup: "إنشاء مجموعة", send: "إرسال الرسالة",
+      back: "العودة للرئيسية"
+    },
+    hi: {
+      welcome: "SM CALL में आपका स्वागत है", intro: "अपने फ़ोन नंबर से लॉगिन करें।",
+      otp: "SMS OTP भेजें", demo: "मुफ़्त ऑनलाइन डेमो शुरू करें",
+      signup: "नया खाता बनाएँ", audio: "ऑडियो कॉल",
+      video: "वीडियो कॉल", messages: "संदेश", group: "ग्रुप चैट",
+      home: "होम", chats: "चैट", profile: "प्रोफ़ाइल",
+      personal: "निजी चैट", friend: "मित्र की User ID",
+      start: "चैट शुरू करें", groupName: "ग्रुप का नाम",
+      createGroup: "ग्रुप बनाएँ", send: "संदेश भेजें",
+      back: "होम पर वापस जाएँ"
+    }
+  }[language];
+
+  document.getElementById("welcomeTitle").textContent = t.welcome;
+  document.getElementById("welcomeText").textContent = t.intro;
+  document.getElementById("loginButton").textContent = t.otp;
+  const languageButton = document.querySelector(".language");
+  if (languageButton) languageButton.textContent = languageLabels[language] + " ▾";
+
+  const featureTitles = document.querySelectorAll(".feature h3");
+  [t.audio, t.video, t.messages, t.group].forEach((label, i) => {
+    if (featureTitles[i]) featureTitles[i].textContent = label;
+  });
+  const navButtons = document.querySelectorAll(".nav button");
+  [t.home, t.chats, t.profile].forEach((label, i) => {
+    if (navButtons[i]) navButtons[i].lastChild.textContent = label;
+  });
+  const chatHeading = document.querySelector("#chatsScreen h2");
+  if (chatHeading) chatHeading.textContent = t.personal;
+  const friendInput = document.getElementById("friendUID");
+  if (friendInput) friendInput.placeholder = t.friend;
+  const startButton = document.querySelector("#chatsScreen .primary");
+  if (startButton) startButton.textContent = t.start;
+  const groupInput = document.getElementById("groupName");
+  if (groupInput) groupInput.placeholder = t.groupName;
+  const groupButton = document.querySelector("#groupScreen .primary");
+  if (groupButton) groupButton.textContent = t.createGroup;
+  const sendButton = document.querySelector("#chatRoomScreen .primary");
+  if (sendButton) sendButton.textContent = t.send;
+  const backButtons = document.querySelectorAll(".secondary");
+  backButtons.forEach(button => {
+    if (button.textContent.trim() === "হোমে ফিরে যান" || button.textContent.trim() === "Back to Home") {
+      button.textContent = t.back;
+    }
+  });
+}
+
 function changeLanguage() {
-  language = language === "bn" ? "en" : "bn";
-
-  document.getElementById("welcomeTitle").textContent =
-    language === "bn"
-      ? "স্বাগতম SM CALL-এ"
-      : "Welcome to SM CALL";
-
-  document.getElementById("welcomeText").textContent =
-    language === "bn"
-      ? "আপনার ফোন নম্বর দিয়ে লগইন করুন।"
-      : "Login with your phone number.";
-
-  document.getElementById("loginButton").textContent =
-    language === "bn"
-      ? "SMS OTP পাঠান"
-      : "Send SMS OTP";
+  const index = supportedLanguages.indexOf(language);
+  setLanguage(supportedLanguages[(index + 1) % supportedLanguages.length]);
 }
 
 // AUTH STATE
