@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   validate:
-    name: Prototype smoke checks
+    name: Prototype and Firestore rules tests
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -20,6 +20,10 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-      - name: Validate prototype
-        run: node scripts/validate-prototype.mjs
+          node-version: 24
+      - name: Install test dependencies
+        run: npm install --no-audit --no-fund
+      - name: Run prototype smoke checks
+        run: npm run validate
+      - name: Test Firestore rules in the emulator
+        run: npx firebase --non-interactive emulators:exec --project demo-sm-call --only firestore "npm run test:rules"
