@@ -10,7 +10,8 @@ SM CALL is an Android-first communication project. The public GitHub Pages site 
 
 ## What is currently implemented
 
-- Mobile-friendly login and home screens.
+- Mobile-friendly web prototype login and home screens.
+- A first native Android project scaffold in `android/` with a four-language phone-login UI and Firebase Auth/Firestore integration code; it still needs the Firebase Android config file and physical-device testing.
 - Firebase Anonymous Authentication option labelled **Online Demo**. This does not verify a phone number and does not send an OTP.
 - Local-only demo account option. Local demo data stays in the same browser/device and cannot chat with another device.
 - Firebase user profile documents. Public display names are stored in `users/{uid}`; phone numbers are stored separately in owner-only `privateUsers/{uid}`.
@@ -27,7 +28,7 @@ SM CALL is an Android-first communication project. The public GitHub Pages site 
 - One-to-one audio calls and video calls.
 - Group audio/video calls for up to 20 people. These require WebRTC signaling and, for reliable large group calls, an SFU/TURN service and its configuration.
 - Complete Bengali, English, Arabic, and Hindi localization across all screens, validation messages, and chat flows.
-- Native Android application, signed APK/AAB, device-tested release, and Play Store publication.
+- A completed native Android application, signed release APK/AAB, physical-device verification, and Play Store publication. The initial Android scaffold exists, but its chat/call features are not implemented yet.
 
 ## Automated prototype checks
 
@@ -62,7 +63,7 @@ The rules in `firestore.rules` restrict profile and chat access. Updating the fi
 2. Verify group creation and group messaging with two or more real Online Demo accounts.
 3. Finish localization and improve account/profile flows.
 4. Add secure call signaling and integrate a configured WebRTC/SFU provider before enabling audio/video call buttons.
-5. Create a native Android project, configure Firebase for Android, build APK/AAB, and test on physical Android devices.
+5. Register the native Android package `com.smcall.app` in Firebase, add `android/app/google-services.json`, then build and test the APK on a physical Android device.
 6. Enable phone OTP and carrier SMS only after the required providers and billing are configured.
 
 ## Important
