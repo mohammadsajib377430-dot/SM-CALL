@@ -26,7 +26,7 @@ To connect Firebase:
 1. In Firebase Console, add an **Android app** to project `sm-call-bf23e`.
 2. Enter this exact package name: `com.smcall.app`.
 3. Download `google-services.json`.
-4. Put the file at `android/app/google-services.json`. Do not rename it or commit it to GitHub.
+4. Put the file at `android/app/google-services.json` with that exact name. Firebase documents this as non-secret client configuration, so it may be committed to this public repository to let GitHub Actions build the Firebase-connected APK. Never commit a Firebase Admin SDK service-account JSON file or private key.
 5. Add the Android app's SHA-256 signing certificate fingerprint in Firebase project settings before testing phone authentication with Play Integrity.
 
 When the JSON file is present, the Google Services Gradle plugin is applied automatically. Without it, the app displays a clear Firebase setup message instead of crashing.
