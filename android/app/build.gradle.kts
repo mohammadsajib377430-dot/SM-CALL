@@ -1,11 +1,18 @@
 plugins {
     id("com.android.application")
+    id("org.jetbrains.kotlin.android")
 }
 
 // The project can build a UI-only debug APK before Firebase is registered.
 // Add app/google-services.json to activate Firebase automatically.
 if (file("google-services.json").isFile) {
     apply(plugin = "com.google.gms.google-services")
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+    }
 }
 
 android {

@@ -181,7 +181,7 @@ class MainActivity : Activity() {
 
     private fun baseScreen(): LinearLayout {
         val scroll = ScrollView(this).apply {
-            fillViewport = true
+            isFillViewport = true
             isVerticalScrollBarEnabled = false
         }
         val page = LinearLayout(this).apply {
