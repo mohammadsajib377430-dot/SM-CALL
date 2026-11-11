@@ -21,21 +21,27 @@ This is the first native Android application foundation for SM CALL. It is separ
 
 The project intentionally builds without Firebase configuration so a debug UI APK can be produced first.
 
-To connect Firebase:
-
 1. In Firebase Console, add an **Android app** to project `sm-call-bf23e`.
 2. Enter this exact package name: `com.smcall.app`.
 3. Download `google-services.json`.
-4. Put the file at `android/app/google-services.json` with that exact name. Firebase documents this as non-secret client configuration, so it may be committed to this public repository to let GitHub Actions build the Firebase-connected APK. Never commit a Firebase Admin SDK service-account JSON file or private key.
-5. Add the Android app's SHA-256 signing certificate fingerprint in Firebase project settings before testing phone authentication with Play Integrity.
+4. Put the file at `android/app/google-services.json` with that exact name. This is Firebase client configuration, not an Admin SDK credential. It can be committed to the public repository if you want CI to build an APK with Firebase enabled. Never commit a Firebase Admin SDK service-account JSON file or private key.
+5. Add the signing certificate fingerprints for the exact APK you will install. The Android build workflow prints the debug APK's SHA-1 and SHA-256 fingerprints in the step named **Print debug APK signing fingerprints**. Copy both values into Firebase Console → Project settings → Your apps → the `com.smcall.app` Android app → SHA certificate fingerprints.
+
+The workflow's fingerprint belongs to the APK produced by that run. If a later build prints a different fingerprint, add that fingerprint too before testing the newer APK.
 
 When the JSON file is present, the Google Services Gradle plugin is applied automatically. Without it, the app displays a clear Firebase setup message instead of crashing.
 
-Phone OTP delivery still depends on the Firebase project's phone sign-in settings, app verification, allowed regions, quotas, and billing rules. Use Firebase's fictional test phone numbers for development where available; do not send real SMS until the project is configured and costs are understood.
+Phone OTP delivery still depends on the Firebase project's phone sign-in provider, app verification, allowed SMS regions, quotas, and billing rules. Use Firebase's fictional test phone numbers for development where available; do not send real SMS until the project is configured and costs are understood.
 
-## Build
+## Build and verify
 
-The GitHub Actions workflow `.github/workflows/android-build.yml` builds a debug APK with Gradle 9.6.0 and uploads it as an artifact. The workflow can build the UI even before `google-services.json` is added.
+The GitHub Actions workflow `.github/workflows/android-build.yml` builds a debug APK with Gradle 9.6.0, prints the APK signing fingerprints, and uploads the APK as an artifact for 14 days.
+
+- Open the repository's **Actions** tab.
+- Open the latest **Build SM CALL Android** run.
+- Confirm the **Build debug APK** and **Print debug APK signing fingerprints** steps succeeded.
+- Copy the SHA-1 and SHA-256 values from the fingerprint step.
+- Download the `sm-call-debug-apk` artifact from that same run.
 
 The APK from this workflow is for development testing only. It is not a signed Play Store release.
 
