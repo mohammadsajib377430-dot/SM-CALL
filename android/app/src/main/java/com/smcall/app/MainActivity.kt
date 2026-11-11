@@ -480,7 +480,7 @@ class MainActivity : Activity() {
 
         database.collection("users").document(user.uid)
             .set(publicProfile, SetOptions.merge())
-            .continueWithTask {
+            .onSuccessTask {
                 database.collection("privateUsers").document(user.uid)
                     .set(privateProfile, SetOptions.merge())
             }
