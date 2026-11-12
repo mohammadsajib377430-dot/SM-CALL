@@ -27,7 +27,7 @@ The project intentionally builds without Firebase configuration so a debug UI AP
 4. Put the file at `android/app/google-services.json` with that exact name. This is Firebase client configuration, not an Admin SDK credential. It can be committed to the public repository if you want CI to build an APK with Firebase enabled. Never commit a Firebase Admin SDK service-account JSON file or private key.
 5. Add the signing certificate fingerprints for the exact APK you will install. The Android build workflow prints the debug APK's SHA-1 and SHA-256 fingerprints in the step named **Print debug APK signing fingerprints**. Copy both values into Firebase Console → Project settings → Your apps → the `com.smcall.app` Android app → SHA certificate fingerprints.
 
-The workflow's fingerprint belongs to the APK produced by that run. If a later build prints a different fingerprint, add that fingerprint too before testing the newer APK.
+The workflow's fingerprint belongs to the APK produced by that run. The downloaded `sm-call-debug-apk` artifact contains both `app-debug.apk` and `fingerprints.txt`; use the values in that text file for the same APK. If a later build prints a different fingerprint, add that fingerprint too before testing the newer APK.
 
 When the JSON file is present, the Google Services Gradle plugin is applied automatically. Without it, the app displays a clear Firebase setup message instead of crashing.
 
@@ -41,7 +41,8 @@ The GitHub Actions workflow `.github/workflows/android-build.yml` builds a debug
 - Open the latest **Build SM CALL Android** run.
 - Confirm the **Build debug APK** and **Print debug APK signing fingerprints** steps succeeded.
 - Copy the SHA-1 and SHA-256 values from the fingerprint step.
-- Download the `sm-call-debug-apk` artifact from that same run.
+- Download the `sm-call-debug-apk` artifact from that same run. It contains `app-debug.apk` and `fingerprints.txt`.
+- Check the run's **Report Firebase configuration mode** step. If it says `google-services.json` is absent, the APK is UI-only and Firebase Phone Authentication cannot initialize.
 
 The APK from this workflow is for development testing only. It is not a signed Play Store release.
 
