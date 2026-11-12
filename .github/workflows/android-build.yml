@@ -40,24 +40,39 @@ jobs:
         with:
           gradle-version: "9.6.0"
 
+      - name: Report Firebase configuration mode
+        shell: bash
+        run: |
+          if [ -f android/app/google-services.json ]; then
+            echo "Firebase Android client configuration is present."
+          else
+            echo "::notice::google-services.json is absent; this build is UI-only and Firebase phone authentication cannot initialize."
+          fi
+
       - name: Build debug APK
         run: gradle --no-daemon -p android assembleDebug
 
-      - name: Print debug APK signing fingerprints
+      - name: Collect debug APK and signing fingerprints
         shell: bash
         run: |
           APK="android/app/build/outputs/apk/debug/app-debug.apk"
           APKSIGNER="$ANDROID_HOME/build-tools/36.0.0/apksigner"
+          OUT="build-artifacts"
+          mkdir -p "$OUT"
+
           if [ ! -f "$APK" ]; then
             echo "::error::Debug APK was not created."
             exit 1
           fi
-          "$APKSIGNER" verify --print-certs "$APK" | grep -E "Signer #1 certificate SHA-1 digest|Signer #1 certificate SHA-256 digest"
 
-      - name: Upload debug APK
+          cp "$APK" "$OUT/app-debug.apk"
+          "$APKSIGNER" verify --print-certs "$APK" > "$OUT/fingerprints.txt"
+          grep -E "Signer #1 certificate SHA-1 digest|Signer #1 certificate SHA-256 digest" "$OUT/fingerprints.txt"
+
+      - name: Upload debug APK and fingerprints
         uses: actions/upload-artifact@v4
         with:
           name: sm-call-debug-apk
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          path: build-artifacts/*
           if-no-files-found: error
           retention-days: 14
