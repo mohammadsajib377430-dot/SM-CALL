@@ -5,6 +5,7 @@ import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
+import android.os.CountDownTimer
 import android.text.InputType
 import android.view.Gravity
 import android.view.View
@@ -30,9 +31,14 @@ class MainActivity : Activity() {
     private var auth: FirebaseAuth? = null
     private var language = "bn"
     private var verificationId: String? = null
+    private var resendToken: PhoneAuthProvider.ForceResendingToken? = null
+    private var resendTimer: CountDownTimer? = null
+    private var resendAvailableAtMillis = 0L
+    private var otpRequestInProgress = false
 
     private lateinit var phoneInput: EditText
     private lateinit var otpInput: EditText
+    private lateinit var sendOtpButton: Button
     private lateinit var verifyButton: Button
     private lateinit var statusText: TextView
 
@@ -64,6 +70,11 @@ class MainActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        language = savedInstanceState?.getString(STATE_LANGUAGE) ?: language
+        verificationId = savedInstanceState?.getString(STATE_VERIFICATION_ID)
+        resendAvailableAtMillis =
+            savedInstanceState?.getLong(STATE_RESEND_AVAILABLE_AT) ?: 0L
+
         window.statusBarColor = Color.rgb(7, 27, 54)
         window.navigationBarColor = Color.rgb(7, 27, 54)
 
@@ -78,7 +89,31 @@ class MainActivity : Activity() {
             renderHome(signedInUser)
         } else {
             renderLogin()
+            savedInstanceState?.let { state ->
+                phoneInput.setText(state.getString(STATE_PHONE).orEmpty())
+                otpInput.setText(state.getString(STATE_OTP).orEmpty())
+            }
+            restorePendingOtpUi()
         }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putString(STATE_LANGUAGE, language)
+        outState.putString(STATE_VERIFICATION_ID, verificationId)
+        outState.putLong(STATE_RESEND_AVAILABLE_AT, resendAvailableAtMillis)
+        if (::phoneInput.isInitialized) {
+            outState.putString(STATE_PHONE, phoneInput.text.toString())
+        }
+        if (::otpInput.isInitialized) {
+            outState.putString(STATE_OTP, otpInput.text.toString())
+        }
+    }
+
+    override fun onDestroy() {
+        resendTimer?.cancel()
+        resendTimer = null
+        super.onDestroy()
     }
 
     private fun labels(): Labels = when (language) {
@@ -350,7 +385,7 @@ class MainActivity : Activity() {
         statusText = addText(page, "", 14f)
         addSpace(page, 6)
 
-        addButton(page, copy.sendOtp, { sendOtp() })
+        sendOtpButton = addButton(page, copy.sendOtp, { sendOtp() })
         verifyButton = addButton(page, copy.verifyOtp, { verifyOtp() }, true)
         verifyButton.visibility = View.GONE
 
@@ -363,6 +398,8 @@ class MainActivity : Activity() {
     }
 
     private fun changeLanguage() {
+        val currentPhone = if (::phoneInput.isInitialized) phoneInput.text.toString() else ""
+        val currentOtp = if (::otpInput.isInitialized) otpInput.text.toString() else ""
         val currentIndex = languages.indexOf(language).coerceAtLeast(0)
         language = languages[(currentIndex + 1) % languages.size]
         val signedInUser = auth?.currentUser
@@ -370,6 +407,64 @@ class MainActivity : Activity() {
             renderHome(signedInUser)
         } else {
             renderLogin()
+            phoneInput.setText(currentPhone)
+            otpInput.setText(currentOtp)
+            restorePendingOtpUi()
+        }
+    }
+
+    private fun resendReadyText(): String = when (language) {
+        "en" -> "Resend SMS code"
+        "ar" -> "إعادة إرسال رمز SMS"
+        "hi" -> "SMS कोड फिर भेजें"
+        else -> "আবার SMS OTP পাঠান"
+    }
+
+    private fun resendCountdownText(seconds: Long): String = when (language) {
+        "en" -> "Resend in ${seconds}s"
+        "ar" -> "${seconds} ث لإعادة الإرسال"
+        "hi" -> "${seconds} सेकंड में फिर भेजें"
+        else -> "${seconds} সেকেন্ড পরে আবার পাঠান"
+    }
+
+    private fun startResendCooldown(durationMillis: Long = 30_000L) {
+        resendTimer?.cancel()
+        if (durationMillis <= 0L) {
+            resendAvailableAtMillis = 0L
+            sendOtpButton.isEnabled = true
+            sendOtpButton.text = resendReadyText()
+            resendTimer = null
+            return
+        }
+
+        resendAvailableAtMillis = System.currentTimeMillis() + durationMillis
+        sendOtpButton.isEnabled = false
+        resendTimer = object : CountDownTimer(durationMillis, 1_000L) {
+            override fun onTick(millisUntilFinished: Long) {
+                sendOtpButton.text =
+                    resendCountdownText((millisUntilFinished + 999L) / 1_000L)
+            }
+
+            override fun onFinish() {
+                resendTimer = null
+                resendAvailableAtMillis = 0L
+                sendOtpButton.isEnabled = true
+                sendOtpButton.text = resendReadyText()
+            }
+        }.start()
+    }
+
+    private fun restorePendingOtpUi() {
+        if (verificationId == null) return
+        otpInput.visibility = View.VISIBLE
+        verifyButton.visibility = View.VISIBLE
+        sendOtpButton.text = resendReadyText()
+        val remaining = resendAvailableAtMillis - System.currentTimeMillis()
+        if (remaining > 0L) {
+            startResendCooldown(remaining)
+        } else {
+            resendAvailableAtMillis = 0L
+            sendOtpButton.isEnabled = true
         }
     }
 
@@ -387,10 +482,20 @@ class MainActivity : Activity() {
             return
         }
 
+        if (otpRequestInProgress) return
+        if (resendAvailableAtMillis > System.currentTimeMillis()) return
+
+        otpRequestInProgress = true
+        sendOtpButton.isEnabled = false
         statusText.text = copy.verifying
         val callbacks = object : PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
             override fun onVerificationCompleted(credential: PhoneAuthCredential) {
                 runOnUiThread {
+                    otpRequestInProgress = false
+                    resendTimer?.cancel()
+                    resendTimer = null
+                    resendAvailableAtMillis = 0L
+                    sendOtpButton.isEnabled = false
                     statusText.text = copy.verifying
                     signInWithCredential(credential)
                 }
@@ -398,7 +503,10 @@ class MainActivity : Activity() {
 
             override fun onVerificationFailed(error: com.google.firebase.FirebaseException) {
                 runOnUiThread {
-                    statusText.text = copy.otpFailed + (error.localizedMessage ?: error.javaClass.simpleName)
+                    otpRequestInProgress = false
+                    sendOtpButton.isEnabled = true
+                    statusText.text =
+                        copy.otpFailed + (error.localizedMessage ?: error.javaClass.simpleName)
                 }
             }
 
@@ -408,9 +516,13 @@ class MainActivity : Activity() {
             ) {
                 super.onCodeSent(id, token)
                 verificationId = id
+                resendToken = token
                 runOnUiThread {
+                    otpRequestInProgress = false
                     otpInput.visibility = View.VISIBLE
                     verifyButton.visibility = View.VISIBLE
+                    sendOtpButton.text = resendReadyText()
+                    startResendCooldown()
                     statusText.text = copy.otpSent
                 }
             }
@@ -423,14 +535,14 @@ class MainActivity : Activity() {
             }
         }
 
-        val options = PhoneAuthOptions.newBuilder(currentAuth)
+        val optionsBuilder = PhoneAuthOptions.newBuilder(currentAuth)
             .setPhoneNumber(phone)
             .setTimeout(60L, TimeUnit.SECONDS)
             .setActivity(this)
             .setCallbacks(callbacks)
-            .build()
+        resendToken?.let { optionsBuilder.setForceResendingToken(it) }
 
-        PhoneAuthProvider.verifyPhoneNumber(options)
+        PhoneAuthProvider.verifyPhoneNumber(optionsBuilder.build())
     }
 
     private fun verifyOtp() {
@@ -528,5 +640,13 @@ class MainActivity : Activity() {
 
     private fun showNotReady(message: String) {
         Toast.makeText(this, message, Toast.LENGTH_LONG).show()
+    }
+
+    private companion object {
+        const val STATE_LANGUAGE = "state_language"
+        const val STATE_VERIFICATION_ID = "state_verification_id"
+        const val STATE_RESEND_AVAILABLE_AT = "state_resend_available_at"
+        const val STATE_PHONE = "state_phone"
+        const val STATE_OTP = "state_otp"
     }
 }
