@@ -91,7 +91,6 @@ class MainActivity : Activity() {
             renderLogin()
             savedInstanceState?.let { state ->
                 phoneInput.setText(state.getString(STATE_PHONE).orEmpty())
-                otpInput.setText(state.getString(STATE_OTP).orEmpty())
             }
             restorePendingOtpUi()
         }
@@ -104,9 +103,6 @@ class MainActivity : Activity() {
         outState.putLong(STATE_RESEND_AVAILABLE_AT, resendAvailableAtMillis)
         if (::phoneInput.isInitialized) {
             outState.putString(STATE_PHONE, phoneInput.text.toString())
-        }
-        if (::otpInput.isInitialized) {
-            outState.putString(STATE_OTP, otpInput.text.toString())
         }
     }
 
@@ -647,6 +643,5 @@ class MainActivity : Activity() {
         const val STATE_VERIFICATION_ID = "state_verification_id"
         const val STATE_RESEND_AVAILABLE_AT = "state_resend_available_at"
         const val STATE_PHONE = "state_phone"
-        const val STATE_OTP = "state_otp"
     }
 }
