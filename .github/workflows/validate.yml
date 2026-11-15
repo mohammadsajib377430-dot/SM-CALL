@@ -23,6 +23,8 @@ jobs:
           node-version: 24
       - name: Install test dependencies
         run: npm install --no-audit --no-fund
+      - name: Test Firebase Android configuration validator
+        run: npm run test:firebase-config
       - name: Run prototype smoke checks
         run: npm run validate
       - name: Test Firestore rules in the emulator
