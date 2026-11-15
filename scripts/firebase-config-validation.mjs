@@ -11,7 +11,7 @@ export function validateFirebaseAndroidConfig(config) {
   const actualProjectId = config?.project_info?.project_id;
   if (actualProjectId !== EXPECTED_FIREBASE_PROJECT_ID) {
     errors.push(
-      `project_info.project_id must be "${EXPECTED_FIREBASE_PROJECT_ID}", received "${actualProjectId ?? "(missing)"}".`
+      \`project_info.project_id must be "\${EXPECTED_FIREBASE_PROJECT_ID}", received "\${actualProjectId ?? "(missing)"}".\`
     );
   }
 
@@ -24,14 +24,14 @@ export function validateFirebaseAndroidConfig(config) {
 
   if (!androidClient) {
     errors.push(
-      `No Android client was found for package "${EXPECTED_ANDROID_PACKAGE_NAME}".`
+      \`No Android client was found for package "\${EXPECTED_ANDROID_PACKAGE_NAME}".\`
     );
     return errors;
   }
 
   const appId = androidClient?.client_info?.mobilesdk_app_id;
   // Firebase Android App IDs have the form 1:<project-number>:android:<hex-id>.
-  if (!/^1:\\d+:android:[a-f0-9]+$/i.test(appId ?? "")) {
+  if (!/^1:\d+:android:[a-f0-9]+$/i.test(appId ?? "")) {
     errors.push("The matching Android client is missing a valid mobilesdk_app_id.");
   }
 
