@@ -11,7 +11,11 @@ export function validateFirebaseAndroidConfig(config) {
   const actualProjectId = config?.project_info?.project_id;
   if (actualProjectId !== EXPECTED_FIREBASE_PROJECT_ID) {
     errors.push(
-      \`project_info.project_id must be "\${EXPECTED_FIREBASE_PROJECT_ID}", received "\${actualProjectId ?? "(missing)"}".\`
+      'project_info.project_id must be "' +
+        EXPECTED_FIREBASE_PROJECT_ID +
+        '", received "' +
+        (actualProjectId ?? "(missing)") +
+        '".'
     );
   }
 
@@ -24,7 +28,9 @@ export function validateFirebaseAndroidConfig(config) {
 
   if (!androidClient) {
     errors.push(
-      \`No Android client was found for package "\${EXPECTED_ANDROID_PACKAGE_NAME}".\`
+      'No Android client was found for package "' +
+        EXPECTED_ANDROID_PACKAGE_NAME +
+        '".'
     );
     return errors;
   }
