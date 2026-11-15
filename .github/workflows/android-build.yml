@@ -6,12 +6,14 @@ on:
     paths:
       - "android/**"
       - "scripts/validate-android-firebase-config.mjs"
+      - "scripts/firebase-config-validation.mjs"
       - ".github/workflows/android-build.yml"
   pull_request:
     branches: ["main"]
     paths:
       - "android/**"
       - "scripts/validate-android-firebase-config.mjs"
+      - "scripts/firebase-config-validation.mjs"
       - ".github/workflows/android-build.yml"
   workflow_dispatch:
 
