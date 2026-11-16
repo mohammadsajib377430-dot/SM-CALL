@@ -37,8 +37,9 @@ Phone OTP delivery still depends on the Firebase project's phone sign-in provide
 
 ## Build and verify
 
-The GitHub Actions workflow builds a debug APK with Gradle 9.6.0, validates the optional Firebase Android configuration, prints the APK signing fingerprints, and uploads the APK as an artifact for 14 days.
+The GitHub Actions workflow validates the optional Firebase Android configuration, runs the Android JVM unit tests, builds a debug APK with Gradle 9.6.0, prints the APK signing fingerprints, and uploads the APK as an artifact for 14 days.
 
+- Run the local JVM unit tests with `gradle --no-daemon -p android testDebugUnitTest` (or let the Android workflow run them automatically).
 - Open the repository's **Actions** tab.
 - Open the latest **Build SM CALL Android** run.
 - Confirm the **Validate Firebase Android configuration**, **Build debug APK**, and **Collect debug APK and signing fingerprints** steps succeeded.

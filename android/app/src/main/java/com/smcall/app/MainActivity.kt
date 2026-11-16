@@ -467,7 +467,7 @@ class MainActivity : Activity() {
     private fun sendOtp() {
         val copy = labels()
         val phone = phoneInput.text.toString().trim()
-        if (!Regex("^\\+[1-9][0-9]{7,14}$").matches(phone)) {
+        if (!PhoneAuthInputValidator.isValidPhoneNumber(phone)) {
             statusText.text = copy.invalidPhone
             return
         }
@@ -549,7 +549,7 @@ class MainActivity : Activity() {
             statusText.text = copy.otpSent
             return
         }
-        if (!Regex("^[0-9]{6}$").matches(code)) {
+        if (!PhoneAuthInputValidator.isValidOtp(code)) {
             statusText.text = copy.invalidOtp
             return
         }

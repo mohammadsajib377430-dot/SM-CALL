@@ -47,6 +47,9 @@ jobs:
       - name: Validate Firebase Android configuration
         run: node scripts/validate-android-firebase-config.mjs
 
+      - name: Run Android unit tests
+        run: gradle --no-daemon -p android testDebugUnitTest
+
       - name: Build debug APK
         run: gradle --no-daemon -p android assembleDebug
 
