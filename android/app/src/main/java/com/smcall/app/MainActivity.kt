@@ -466,10 +466,13 @@ class MainActivity : Activity() {
 
     private fun sendOtp() {
         val copy = labels()
-        val phone = phoneInput.text.toString().trim()
+        val phone = PhoneAuthInputValidator.normalizePhoneNumber(phoneInput.text.toString())
         if (!PhoneAuthInputValidator.isValidPhoneNumber(phone)) {
             statusText.text = copy.invalidPhone
             return
+        }
+        if (phoneInput.text.toString() != phone) {
+            phoneInput.setText(phone)
         }
 
         val currentAuth = auth
@@ -543,7 +546,7 @@ class MainActivity : Activity() {
 
     private fun verifyOtp() {
         val copy = labels()
-        val code = otpInput.text.toString().trim()
+        val code = PhoneAuthInputValidator.normalizeOtp(otpInput.text.toString())
         val id = verificationId
         if (id == null) {
             statusText.text = copy.otpSent
@@ -552,6 +555,9 @@ class MainActivity : Activity() {
         if (!PhoneAuthInputValidator.isValidOtp(code)) {
             statusText.text = copy.invalidOtp
             return
+        }
+        if (otpInput.text.toString() != code) {
+            otpInput.setText(code)
         }
         statusText.text = copy.verifying
         signInWithCredential(PhoneAuthProvider.getCredential(id, code))
