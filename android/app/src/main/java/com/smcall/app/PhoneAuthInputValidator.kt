@@ -5,7 +5,9 @@ package com.smcall.app
  * This validates input shape only; Firebase still verifies the actual number and code.
  */
 object PhoneAuthInputValidator {
-    private val e164Pattern = Regex("""^\\+[1-9][0-9]{7,14}$""")
+    // Raw Kotlin strings do not need a doubled backslash: \\+ in regex would
+    // match backslashes, while \\+ here in the source below is a literal plus.
+    private val e164Pattern = Regex("""^\+[1-9][0-9]{7,14}$""")
     private val otpPattern = Regex("""^[0-9]{6}$""")
 
     private fun normalizeDecimalDigits(value: String): String = buildString {
