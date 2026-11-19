@@ -28,6 +28,15 @@ object PhoneAuthInputValidator {
     fun isValidPhoneNumber(value: String): Boolean =
         e164Pattern.matches(normalizePhoneNumber(value))
 
+    /**
+     * A Firebase verification ID belongs to the phone number that requested it.
+     * Compare normalized values so localized digits and harmless separators still match.
+     */
+    fun matchesVerificationPhone(input: String, verificationPhone: String?): Boolean =
+        verificationPhone != null &&
+            normalizePhoneNumber(input) == normalizePhoneNumber(verificationPhone) &&
+            isValidPhoneNumber(verificationPhone)
+
     fun isValidOtp(value: String): Boolean =
         otpPattern.matches(normalizeOtp(value))
 }
