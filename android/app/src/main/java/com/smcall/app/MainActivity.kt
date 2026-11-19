@@ -31,6 +31,7 @@ class MainActivity : Activity() {
     private var auth: FirebaseAuth? = null
     private var language = "bn"
     private var verificationId: String? = null
+    private var verificationPhoneNumber: String? = null
     private var resendToken: PhoneAuthProvider.ForceResendingToken? = null
     private var resendTimer: CountDownTimer? = null
     private var resendAvailableAtMillis = 0L
@@ -55,6 +56,7 @@ class MainActivity : Activity() {
         val verifying: String,
         val firebaseMissing: String,
         val invalidPhone: String,
+        val phoneChanged: String,
         val invalidOtp: String,
         val otpFailed: String,
         val homeTitle: String,
@@ -72,6 +74,7 @@ class MainActivity : Activity() {
         super.onCreate(savedInstanceState)
         language = savedInstanceState?.getString(STATE_LANGUAGE) ?: language
         verificationId = savedInstanceState?.getString(STATE_VERIFICATION_ID)
+        verificationPhoneNumber = savedInstanceState?.getString(STATE_VERIFICATION_PHONE)
         resendAvailableAtMillis =
             savedInstanceState?.getLong(STATE_RESEND_AVAILABLE_AT) ?: 0L
 
@@ -100,6 +103,7 @@ class MainActivity : Activity() {
         super.onSaveInstanceState(outState)
         outState.putString(STATE_LANGUAGE, language)
         outState.putString(STATE_VERIFICATION_ID, verificationId)
+        outState.putString(STATE_VERIFICATION_PHONE, verificationPhoneNumber)
         outState.putLong(STATE_RESEND_AVAILABLE_AT, resendAvailableAtMillis)
         if (::phoneInput.isInitialized) {
             outState.putString(STATE_PHONE, phoneInput.text.toString())
@@ -124,6 +128,7 @@ class MainActivity : Activity() {
             "Verifying your number...",
             "Firebase is not connected yet. Add google-services.json to android/app.",
             "Enter a valid international number, e.g. +8801XXXXXXXXX.",
+            "The phone number changed. Send a new code for this number.",
             "Enter the 6-digit code.",
             "Could not verify: ",
             "SM CALL Home",
@@ -147,6 +152,7 @@ class MainActivity : Activity() {
             "جارٍ التحقق من رقمك...",
             "Firebase غير متصل بعد. أضف google-services.json إلى android/app.",
             "أدخل رقمًا دوليًا صحيحًا، مثل +8801XXXXXXXXX.",
+            "تم تغيير رقم الهاتف. أرسل رمزًا جديدًا لهذا الرقم.",
             "أدخل الرمز المكوّن من 6 أرقام.",
             "تعذر التحقق: ",
             "الصفحة الرئيسية لـ SM CALL",
@@ -170,6 +176,7 @@ class MainActivity : Activity() {
             "आपका नंबर सत्यापित हो रहा है...",
             "Firebase अभी कनेक्ट नहीं है। android/app में google-services.json जोड़ें।",
             "सही अंतरराष्ट्रीय नंबर लिखें, जैसे +8801XXXXXXXXX।",
+            "फ़ोन नंबर बदल गया है। इस नंबर के लिए नया कोड भेजें।",
             "6 अंकों का कोड लिखें।",
             "सत्यापन नहीं हुआ: ",
             "SM CALL होम",
@@ -193,6 +200,7 @@ class MainActivity : Activity() {
             "আপনার নম্বর যাচাই হচ্ছে...",
             "Firebase এখনো সংযুক্ত হয়নি। android/app ফোল্ডারে google-services.json যোগ করতে হবে।",
             "সঠিক আন্তর্জাতিক নম্বর লিখুন, যেমন +8801XXXXXXXXX।",
+            "ফোন নম্বর পরিবর্তন হয়েছে। এই নম্বরে নতুন OTP পাঠান।",
             "৬ সংখ্যার OTP লিখুন।",
             "যাচাই করা যায়নি: ",
             "SM CALL হোম",
@@ -423,6 +431,15 @@ class MainActivity : Activity() {
         else -> "${seconds} সেকেন্ড পরে আবার পাঠান"
     }
 
+    private fun clearPendingVerification() {
+        verificationId = null
+        verificationPhoneNumber = null
+        resendToken = null
+        resendTimer?.cancel()
+        resendTimer = null
+        resendAvailableAtMillis = 0L
+    }
+
     private fun startResendCooldown(durationMillis: Long = 30_000L) {
         resendTimer?.cancel()
         if (durationMillis <= 0L) {
@@ -481,6 +498,18 @@ class MainActivity : Activity() {
             return
         }
 
+        if (verificationPhoneNumber != null &&
+            !PhoneAuthInputValidator.matchesVerificationPhone(phone, verificationPhoneNumber)
+        ) {
+            clearPendingVerification()
+            otpInput.text.clear()
+            otpInput.visibility = View.GONE
+            verifyButton.visibility = View.GONE
+            sendOtpButton.text = copy.sendOtp
+            sendOtpButton.isEnabled = true
+        }
+        verificationPhoneNumber = phone
+
         if (otpRequestInProgress) return
         if (resendAvailableAtMillis > System.currentTimeMillis()) return
 
@@ -515,6 +544,7 @@ class MainActivity : Activity() {
             ) {
                 super.onCodeSent(id, token)
                 verificationId = id
+                verificationPhoneNumber = phone
                 resendToken = token
                 runOnUiThread {
                     otpRequestInProgress = false
@@ -552,6 +582,14 @@ class MainActivity : Activity() {
             statusText.text = copy.otpSent
             return
         }
+        if (!PhoneAuthInputValidator.matchesVerificationPhone(
+                phoneInput.text.toString(),
+                verificationPhoneNumber
+            )
+        ) {
+            statusText.text = copy.phoneChanged
+            return
+        }
         if (!PhoneAuthInputValidator.isValidOtp(code)) {
             statusText.text = copy.invalidOtp
             return
@@ -567,6 +605,7 @@ class MainActivity : Activity() {
         val currentAuth = auth ?: return
         currentAuth.signInWithCredential(credential)
             .addOnSuccessListener { result ->
+                clearPendingVerification()
                 val user = result.user
                 if (user != null) {
                     saveProfile(user)
@@ -647,6 +686,7 @@ class MainActivity : Activity() {
     private companion object {
         const val STATE_LANGUAGE = "state_language"
         const val STATE_VERIFICATION_ID = "state_verification_id"
+        const val STATE_VERIFICATION_PHONE = "state_verification_phone"
         const val STATE_RESEND_AVAILABLE_AT = "state_resend_available_at"
         const val STATE_PHONE = "state_phone"
     }
