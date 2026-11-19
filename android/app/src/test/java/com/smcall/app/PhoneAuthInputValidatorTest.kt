@@ -46,6 +46,28 @@ class PhoneAuthInputValidatorTest {
     }
 
     @Test
+    fun verificationCodeIsBoundToThePhoneThatRequestedIt() {
+        assertTrue(
+            PhoneAuthInputValidator.matchesVerificationPhone(
+                "+৮৮০ ১৭১-২৩৪৫৬৭৮",
+                "+8801712345678"
+            )
+        )
+        assertFalse(
+            PhoneAuthInputValidator.matchesVerificationPhone(
+                "+6591234567",
+                "+8801712345678"
+            )
+        )
+        assertFalse(
+            PhoneAuthInputValidator.matchesVerificationPhone(
+                "+8801712345678",
+                null
+            )
+        )
+    }
+
+    @Test
     fun acceptsExactlySixAsciiOtpDigits() {
         assertTrue(PhoneAuthInputValidator.isValidOtp("123456"))
     }
