@@ -520,6 +520,14 @@ class MainActivity : Activity() {
             override fun onVerificationCompleted(credential: PhoneAuthCredential) {
                 runOnUiThread {
                     otpRequestInProgress = false
+                    if (!PhoneAuthInputValidator.matchesVerificationPhone(
+                            phoneInput.text.toString(),
+                            phone
+                        )
+                    ) {
+                        statusText.text = copy.phoneChanged
+                        return@runOnUiThread
+                    }
                     resendTimer?.cancel()
                     resendTimer = null
                     resendAvailableAtMillis = 0L
