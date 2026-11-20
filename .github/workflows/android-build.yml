@@ -45,6 +45,7 @@ jobs:
           gradle-version: "9.6.0"
 
       - name: Validate Firebase Android configuration
+        id: firebase_config
         run: node scripts/validate-android-firebase-config.mjs
 
       - name: Run Android unit tests
@@ -55,6 +56,8 @@ jobs:
 
       - name: Collect debug APK and signing fingerprints
         shell: bash
+        env:
+          BUILD_MODE: ${{ steps.firebase_config.outputs.mode }}
         run: |
           APK="android/app/build/outputs/apk/debug/app-debug.apk"
           APKSIGNER="$ANDROID_HOME/build-tools/36.0.0/apksigner"
@@ -70,10 +73,24 @@ jobs:
           "$APKSIGNER" verify --print-certs "$APK" > "$OUT/fingerprints.txt"
           grep -E "Signer #1 certificate SHA-1 digest|Signer #1 certificate SHA-256 digest" "$OUT/fingerprints.txt"
 
+          if [ "$BUILD_MODE" = "firebase-enabled" ]; then
+            FIREBASE_STATUS="google-services.json validated; Firebase Phone provider, billing, SMS regions, and OTP behavior still need verification."
+          else
+            FIREBASE_STATUS="NOT CONFIGURED — this is a UI-only APK; Firebase Phone Authentication is unavailable."
+          fi
+
+          {
+            echo "SM CALL Android debug build"
+            echo "Build mode: $BUILD_MODE"
+            echo "Application ID: com.smcall.app"
+            echo "Firebase status: $FIREBASE_STATUS"
+            echo "Git commit: $GITHUB_SHA"
+          } > "$OUT/build-info.txt"
+
       - name: Upload debug APK and fingerprints
         uses: actions/upload-artifact@v4
         with:
-          name: sm-call-debug-apk
+          name: sm-call-debug-apk-${{ steps.firebase_config.outputs.mode }}
           path: build-artifacts/*
           if-no-files-found: error
           retention-days: 14
