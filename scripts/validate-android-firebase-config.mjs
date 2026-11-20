@@ -1,12 +1,28 @@
-import { existsSync, readFileSync } from "node:fs";
+import { appendFileSync, existsSync, readFileSync } from "node:fs";
 import { validateFirebaseAndroidConfig } from "./firebase-config-validation.mjs";
 
 const configPath = "android/app/google-services.json";
 
+function reportBuildMode(mode, summary) {
+  const outputPath = process.env.GITHUB_OUTPUT;
+  if (outputPath) appendFileSync(outputPath, `mode=${mode}\n`);
+
+  const summaryPath = process.env.GITHUB_STEP_SUMMARY;
+  if (summaryPath) {
+    appendFileSync(
+      summaryPath,
+      `## Android build mode\n\n${summary}\n\nApplication ID: \`com.smcall.app\`\n`
+    );
+  }
+}
+
 if (!existsSync(configPath)) {
+  const message =
+    "**UI-only APK:** `google-services.json` is absent. Firebase Phone Authentication is not initialized in this build.";
   console.log(
     "::notice::google-services.json is absent. Building the UI-only APK; Firebase Phone Authentication will remain unavailable."
   );
+  reportBuildMode("ui-only", message);
   process.exit(0);
 }
 
@@ -24,6 +40,10 @@ if (errors.length > 0) {
   process.exit(1);
 }
 
+reportBuildMode(
+  "firebase-enabled",
+  "**Firebase-configured APK:** the Android client configuration matches project `sm-call-bf23e` and package `com.smcall.app`. Phone provider, billing, SMS-region settings, and real/test OTP behavior still require separate verification."
+);
 console.log(
   "Firebase Android configuration is valid for sm-call-bf23e / com.smcall.app."
 );
