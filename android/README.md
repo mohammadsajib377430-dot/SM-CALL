@@ -29,7 +29,12 @@ The project intentionally builds without Firebase configuration so a debug UI AP
 
 Add the signing certificate fingerprints for the exact APK you will install. The Android build workflow prints the debug APK's SHA-1 and SHA-256 fingerprints in the step named **Collect debug APK and signing fingerprints**. Copy both values into Firebase Console → Project settings → Your apps → the `com.smcall.app` Android app → SHA certificate fingerprints.
 
-The workflow's fingerprint belongs to the APK produced by that run. The downloaded `sm-call-debug-apk` artifact contains both `app-debug.apk` and `fingerprints.txt`; use the values in that text file for the same APK. If a later build prints a different fingerprint, add that fingerprint too before testing the newer APK.
+The fingerprint belongs to the APK produced by that run. The downloaded artifact contains `app-debug.apk`, `fingerprints.txt`, and `build-info.txt`; use the values in `fingerprints.txt` for that exact APK. If a later build prints a different fingerprint, add that fingerprint too before testing the newer APK.
+
+**Check the artifact name and `build-info.txt` before installing:**
+
+- `sm-call-debug-apk-ui-only` means `google-services.json` was absent. Firebase Phone Authentication cannot initialize in that APK.
+- `sm-call-debug-apk-firebase-enabled` means the client configuration passed validation. It does **not** prove that Phone sign-in is enabled, billing/SMS regions are configured, or OTP delivery works.
 
 When the JSON file is present, the Google Services Gradle plugin is applied automatically. Without it, the app displays a clear Firebase setup message instead of crashing.
 
@@ -37,15 +42,15 @@ Phone OTP delivery still depends on the Firebase project's phone sign-in provide
 
 ## Build and verify
 
-The GitHub Actions workflow validates the optional Firebase Android configuration, runs the Android JVM unit tests, builds a debug APK with Gradle 9.6.0, prints the APK signing fingerprints, and uploads the APK as an artifact for 14 days.
+The GitHub Actions workflow validates the optional Firebase Android configuration, runs the Android JVM unit tests, builds a debug APK with Gradle 9.6.0, prints the APK signing fingerprints, writes a build-mode report, and uploads the APK artifact for 14 days.
 
 - Run the local JVM unit tests with `gradle --no-daemon -p android testDebugUnitTest` (or let the Android workflow run them automatically).
 - Open the repository's **Actions** tab.
 - Open the latest **Build SM CALL Android** run.
 - Confirm the **Validate Firebase Android configuration**, **Build debug APK**, and **Collect debug APK and signing fingerprints** steps succeeded.
-- Copy the SHA-1 and SHA-256 values from the fingerprint step.
-- Download the `sm-call-debug-apk` artifact from that same run. It contains `app-debug.apk` and `fingerprints.txt`.
-- If the validation step reports that `google-services.json` is absent, the APK is UI-only and Firebase Phone Authentication cannot initialize.
+- Read the run summary and `build-info.txt` to confirm whether the artifact is UI-only or Firebase-configured.
+- Copy the SHA-1 and SHA-256 values from `fingerprints.txt`.
+- Download the artifact whose name is `sm-call-debug-apk-ui-only` or `sm-call-debug-apk-firebase-enabled`, as reported by that run.
 
 The APK from this workflow is for development testing only. It is not a signed Play Store release.
 
