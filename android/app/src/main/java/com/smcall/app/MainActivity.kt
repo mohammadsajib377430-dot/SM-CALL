@@ -18,6 +18,7 @@ import android.widget.TextView
 import android.widget.Toast
 import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthException
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.PhoneAuthCredential
 import com.google.firebase.auth.PhoneAuthOptions
@@ -541,8 +542,7 @@ class MainActivity : Activity() {
                 runOnUiThread {
                     otpRequestInProgress = false
                     sendOtpButton.isEnabled = true
-                    statusText.text =
-                        copy.otpFailed + (error.localizedMessage ?: error.javaClass.simpleName)
+                    statusText.text = localizedAuthError(error)
                 }
             }
 
@@ -622,8 +622,17 @@ class MainActivity : Activity() {
                 }
             }
             .addOnFailureListener { error ->
-                statusText.text = labels().otpFailed + (error.localizedMessage ?: "")
+                statusText.text = localizedAuthError(error)
             }
+    }
+
+    private fun localizedAuthError(error: Throwable): String {
+        val errorCode = (error as? FirebaseAuthException)?.errorCode
+        return PhoneAuthErrorMessages.message(
+            errorCode = errorCode,
+            exceptionType = error.javaClass.simpleName,
+            language = language
+        ) ?: labels().otpFailed + (error.localizedMessage ?: error.javaClass.simpleName)
     }
 
     private fun saveProfile(user: FirebaseUser) {
