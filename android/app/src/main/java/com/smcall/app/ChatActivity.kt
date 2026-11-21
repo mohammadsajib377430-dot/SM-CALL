@@ -93,7 +93,7 @@ class ChatActivity : Activity() {
             setPadding(dp(18), dp(22), dp(18), dp(28))
             setBackgroundColor(Color.rgb(7, 27, 54))
         }
-        scroll.addView(page, ScrollView.LayoutParams(
+        scroll.addView(page, ViewGroup.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
         setContentView(scroll)
         return page
@@ -133,7 +133,7 @@ class ChatActivity : Activity() {
         return field
     }
 
-    private fun addButton(label: String, action: () -> Unit, secondary: Boolean = false) {
+    private fun addButton(label: String, secondary: Boolean = false, action: () -> Unit) {
         val button = Button(this).apply {
             text = label
             isAllCaps = false
@@ -166,7 +166,7 @@ class ChatActivity : Activity() {
         addButton(c.create) { createGroup(groupName.text.toString(), members.text.toString()) }
         addText(c.chats, 20f)
         status = addText("লোড হচ্ছে…", 13f)
-        addButton(c.back, { finish() }, true)
+        addButton(c.back, true) { finish() }
         loadChats()
     }
 
@@ -290,7 +290,7 @@ class ChatActivity : Activity() {
                     .addOnFailureListener { setStatus("মেসেজ পাঠানো যায়নি: ${it.localizedMessage}") }
             }
         }
-        addButton(c.back, { renderChatList() }, true)
+        addButton(c.back, true) { renderChatList() }
         messagesListener?.remove()
         messagesListener = db.collection("chats").document(activeChatId!!)
             .collection("messages").orderBy("createdAt")
