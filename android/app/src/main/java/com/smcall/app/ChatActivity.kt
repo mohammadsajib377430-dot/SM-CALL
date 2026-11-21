@@ -13,6 +13,7 @@ import android.widget.TextView
 import android.widget.Toast
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
+import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 
@@ -245,7 +246,7 @@ class ChatActivity : Activity() {
             return
         }
         val members = otherIds + currentUid
-        db.collection("users").whereIn("__name__", otherIds).get()
+        db.collection("users").whereIn(FieldPath.documentId(), otherIds).get()
             .addOnSuccessListener { found ->
                 if (found.size() != otherIds.size) {
                     setStatus("এক বা একাধিক User ID পাওয়া যায়নি।")
