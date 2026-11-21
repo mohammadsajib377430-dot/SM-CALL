@@ -42,8 +42,8 @@ if (errors.length > 0) {
 
 reportBuildMode(
   "firebase-enabled",
-  "**Firebase-configured APK:** the Android client configuration matches project `sm-call-bf23e` and package `com.smcall.app`. Phone provider, billing, SMS-region settings, and real/test OTP behavior still require separate verification."
+  "**Firebase-configured APK:** the Android client configuration matches project `sm-call-665e5` and package `com.smcall.app`. Phone provider, billing, SMS-region settings, and real/test OTP behavior still require separate verification."
 );
 console.log(
-  "Firebase Android configuration is valid for sm-call-bf23e / com.smcall.app."
+  "Firebase Android configuration is valid for sm-call-665e5 / com.smcall.app."
 );

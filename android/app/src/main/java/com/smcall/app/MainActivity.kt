@@ -1,6 +1,7 @@
 package com.smcall.app
 
 import android.app.Activity
+import android.content.Intent
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
@@ -678,7 +679,7 @@ class MainActivity : Activity() {
         addSpace(page, 20)
 
         addButton(page, copy.chats, {
-            showNotReady(copy.notReady)
+            startActivity(Intent(this, ChatActivity::class.java).putExtra("language", language))
         })
         addButton(page, copy.audio, {
             showNotReady(copy.notReady)

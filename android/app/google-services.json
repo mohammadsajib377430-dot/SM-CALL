@@ -1,0 +1,28 @@
+{
+  "project_info": {
+    "project_number": "320271608890",
+    "project_id": "sm-call-665e5",
+    "storage_bucket": "sm-call-665e5.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:320271608890:android:a07b44982b6a186b521903",
+        "android_client_info": {
+          "package_name": "com.smcall.app"
+        }
+      },
+      "api_key": [
+        {
+          "current_key": "AIzaSyDsNwxS6OkMm77TlAEbhtTqgWsOb1cbUwg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
