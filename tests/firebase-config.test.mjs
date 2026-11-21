@@ -4,7 +4,7 @@ import { validateFirebaseAndroidConfig } from "../scripts/firebase-config-valida
 
 function validConfig() {
   return {
-    project_info: { project_id: "sm-call-bf23e" },
+    project_info: { project_id: "sm-call-665e5" },
     client: [
       {
         client_info: {
