@@ -14,6 +14,7 @@ This is the first native Android application foundation for SM CALL. It is separ
 - Native Android Activity and mobile layout.
 - Four-language login labels and Arabic right-to-left layout.
 - Firebase Phone Authentication flow using the Android Firebase Auth SDK.
+- Localized Bengali, English, Arabic, and Hindi guidance for common Firebase phone-auth errors, including disabled billing/provider, rate limits, invalid codes, and app-verification failures; unknown errors retain a diagnostic fallback.
 - Saves the signed-in user's public profile and owner-only phone document using the existing Firestore collection names.
 - Honest placeholders for chat, audio call, video call, and group video; those features are not implemented in this native app yet.
 
