@@ -1,7 +1,17 @@
 import { appendFileSync, existsSync, readFileSync } from "node:fs";
-import { validateFirebaseAndroidConfig } from "./firebase-config-validation.mjs";
+import {
+  EXPECTED_FIREBASE_PROJECT_ID,
+  validateFirebaseAndroidConfig
+} from "./firebase-config-validation.mjs";
 
 const configPath = "android/app/google-services.json";
+const webIndexPath = "index.html";
+
+function getPagesFirebaseProjectId() {
+  if (!existsSync(webIndexPath)) return null;
+  const html = readFileSync(webIndexPath, "utf8");
+  return html.match(/projectId\s*:\s*["']([^"']+)["']/)?.[1] ?? null;
+}
 
 function reportBuildMode(mode, summary) {
   const outputPath = process.env.GITHUB_OUTPUT;
@@ -40,10 +50,24 @@ if (errors.length > 0) {
   process.exit(1);
 }
 
-reportBuildMode(
-  "firebase-enabled",
-  "**Firebase-configured APK:** the Android client configuration matches project `sm-call-bf23e` and package `com.smcall.app`. Phone provider, billing, SMS-region settings, and real/test OTP behavior still require separate verification."
-);
+const androidProjectId = config.project_info.project_id;
+const pagesProjectId = getPagesFirebaseProjectId();
+const projectAlignmentWarning =
+  pagesProjectId && pagesProjectId !== androidProjectId
+    ? `\n\n**Project mismatch warning:** Android uses \`${androidProjectId}\`, while the GitHub Pages demo uses \`${pagesProjectId}\`. Firebase Auth users and Firestore data are separate between these projects until both clients use the same project.`
+    : "";
+
+const summary =
+  `**Firebase-configured APK:** Android client configuration matches project \`${EXPECTED_FIREBASE_PROJECT_ID}\` and package \`com.smcall.app\`. Phone Authentication provider, billing, SMS-region settings, and real/test OTP behavior still require separate verification.` +
+  projectAlignmentWarning;
+
+if (pagesProjectId && pagesProjectId !== androidProjectId) {
+  console.log(
+    `::warning::Android Firebase project ${androidProjectId} differs from GitHub Pages project ${pagesProjectId}; Auth users and Firestore data are not shared.`
+  );
+}
+
+reportBuildMode("firebase-enabled", summary);
 console.log(
-  "Firebase Android configuration is valid for sm-call-bf23e / com.smcall.app."
+  `Firebase Android configuration is valid for ${EXPECTED_FIREBASE_PROJECT_ID} / com.smcall.app.`
 );
