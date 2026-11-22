@@ -1,64 +1,53 @@
 # SM CALL Android app
 
-This is the first native Android application foundation for SM CALL. It is separate from the existing GitHub Pages web prototype.
+This is the native Android application foundation for SM CALL. It is separate from the GitHub Pages web prototype.
 
 ## App identity
 
 - Android package name: `com.smcall.app`
-- Language options in this starter: Bengali, English, Arabic, Hindi
+- Languages: Bengali, English, Arabic, Hindi
 - Minimum Android version: Android 7.0 (API 24)
 - Build output: debug APK from GitHub Actions
 
-## Included in this first milestone
+## Implemented in this milestone
 
 - Native Android Activity and mobile layout.
-- Four-language login labels and Arabic right-to-left layout.
-- Firebase Phone Authentication flow using the Android Firebase Auth SDK.
-- Localized Bengali, English, Arabic, and Hindi guidance for common Firebase phone-auth errors, including disabled billing/provider, rate limits, invalid codes, and app-verification failures; unknown errors retain a diagnostic fallback.
-- Saves the signed-in user's public profile and owner-only phone document using the existing Firestore collection names.
-- Honest placeholders for chat, audio call, video call, and group video; those features are not implemented in this native app yet.
+- Email + password account creation and sign-in.
+- Email verification link, resend verification, reload verification status, and Spam/Junk guidance.
+- Unverified accounts are kept on the verification screen and cannot enter the app home.
+- Password reset email flow.
+- Four-language labels and Arabic right-to-left layout.
+- Saves verified user's email profile to Firestore.
+- Chat, one-to-one calls, and group calls are honest placeholders; they are not implemented yet.
 
 ## Firebase setup required
 
-The project intentionally builds without Firebase configuration so a debug UI APK can be produced first.
-
-1. In Firebase Console, add an **Android app** to project `sm-call-bf23e`.
-2. Enter this exact package name: `com.smcall.app`.
+1. In Firebase Console, open project `sm-call-bf23e`.
+2. Add an **Android app** using this exact package name: `com.smcall.app`.
 3. Download `google-services.json`.
-4. Put the file at `android/app/google-services.json` with that exact name. This is Firebase client configuration, not an Admin SDK credential. It can be committed to the public repository if you want CI to build an APK with Firebase enabled. Never commit a Firebase Admin SDK service-account JSON file or private key.
-5. The Android build workflow validates that the file belongs to Firebase project `sm-call-bf23e`, contains the `com.smcall.app` client, and has a client API key. If the file is absent, CI deliberately produces a UI-only APK and reports that Firebase is not initialized.
+4. Put it at `android/app/google-services.json`.
+5. In Firebase Authentication → Sign-in method, enable **Email/Password**.
+6. In Authentication → Settings → Authorized domains, ensure the domain used for email action links is allowed.
+7. Configure an email template and test the verification and password reset emails.
 
-Add the signing certificate fingerprints for the exact APK you will install. The Android build workflow prints the debug APK's SHA-1 and SHA-256 fingerprints in the step named **Collect debug APK and signing fingerprints**. Copy both values into Firebase Console → Project settings → Your apps → the `com.smcall.app` Android app → SHA certificate fingerprints.
+The Android build workflow checks the optional Firebase configuration. Without `google-services.json`, CI intentionally creates a UI-only APK; Firebase sign-in will not work. A Firebase-configured APK still requires the Email/Password provider to be enabled.
 
-The fingerprint belongs to the APK produced by that run. The downloaded artifact contains `app-debug.apk`, `fingerprints.txt`, and `build-info.txt`; use the values in `fingerprints.txt` for that exact APK. If a later build prints a different fingerprint, add that fingerprint too before testing the newer APK.
-
-**Check the artifact name and `build-info.txt` before installing:**
-
-- `sm-call-debug-apk-ui-only` means `google-services.json` was absent. Firebase Phone Authentication cannot initialize in that APK.
-- `sm-call-debug-apk-firebase-enabled` means the client configuration passed validation. It does **not** prove that Phone sign-in is enabled, billing/SMS regions are configured, or OTP delivery works.
-
-When the JSON file is present, the Google Services Gradle plugin is applied automatically. Without it, the app displays a clear Firebase setup message instead of crashing.
-
-Phone OTP delivery still depends on the Firebase project's phone sign-in provider, app verification, allowed SMS regions, quotas, and billing rules. Use Firebase's fictional test phone numbers for development where available; do not send real SMS until the project is configured and costs are understood.
+Never commit a Firebase Admin SDK service-account JSON file or private key.
 
 ## Build and verify
 
-The GitHub Actions workflow validates the optional Firebase Android configuration, runs the Android JVM unit tests, builds a debug APK with Gradle 9.6.0, prints the APK signing fingerprints, writes a build-mode report, and uploads the APK artifact for 14 days.
+1. Open the repository's **Actions** tab.
+2. Open the latest **Build SM CALL Android** run.
+3. Confirm **Validate Firebase Android configuration**, **Run Android unit tests**, and **Build debug APK** succeeded.
+4. Download the APK artifact shown by that run.
+5. If the artifact is marked UI-only, add the Firebase Android configuration before expecting login to work.
 
-- Run the local JVM unit tests with `gradle --no-daemon -p android testDebugUnitTest` (or let the Android workflow run them automatically).
-- Open the repository's **Actions** tab.
-- Open the latest **Build SM CALL Android** run.
-- Confirm the **Validate Firebase Android configuration**, **Build debug APK**, and **Collect debug APK and signing fingerprints** steps succeeded.
-- Read the run summary and `build-info.txt` to confirm whether the artifact is UI-only or Firebase-configured.
-- Copy the SHA-1 and SHA-256 values from `fingerprints.txt`.
-- Download the artifact whose name is `sm-call-debug-apk-ui-only` or `sm-call-debug-apk-firebase-enabled`, as reported by that run.
-
-The APK from this workflow is for development testing only. It is not a signed Play Store release.
+The APK is for development testing only. It is not a Play Store release.
 
 ## Not yet included
 
-- Native chat and group messaging screens.
-- Audio/video calling or WebRTC.
-- Group calls with up to 20 participants.
+- Real-time chat and group messaging in the native app.
+- One-to-one audio/video calls or WebRTC.
+- Group audio/video call enforcement and signaling (target: maximum 5 participants).
 - Release signing and AAB generation.
 - Physical-device verification.
