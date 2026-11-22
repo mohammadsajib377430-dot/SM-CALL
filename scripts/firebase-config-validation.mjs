@@ -1,4 +1,4 @@
-export const EXPECTED_FIREBASE_PROJECT_ID = "sm-call-bf23e";
+export const EXPECTED_FIREBASE_PROJECT_ID = "sm-call-665e5";
 export const EXPECTED_ANDROID_PACKAGE_NAME = "com.smcall.app";
 
 export function validateFirebaseAndroidConfig(config) {
