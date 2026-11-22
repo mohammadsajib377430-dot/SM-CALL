@@ -36,7 +36,8 @@ class MainActivity : Activity() {
     private lateinit var createAccountButton: Button
     private lateinit var resetPasswordButton: Button
 
-    private val languages = listOf("bn", "en", "ar", "hi")
+    // SM CALL supports Bangla and English only.
+    private val languages = listOf("bn", "en")
 
     private data class Labels(
         val welcome: String,
@@ -55,20 +56,22 @@ class MainActivity : Activity() {
         val loginFailed: String,
         val accountCreated: String,
         val resetSent: String,
+        val verificationSent: String,
+        val emailNotVerified: String,
         val homeTitle: String,
         val signedInAs: String,
         val chats: String,
         val audio: String,
         val video: String,
-        val groupVideo: String,
+        val groupCall: String,
         val logout: String,
-        val notReady: String,
-        val profileSaved: String
+        val notReady: String
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        language = savedInstanceState?.getString(STATE_LANGUAGE) ?: language
+        language = savedInstanceState?.getString(STATE_LANGUAGE)
+            ?.takeIf { it in languages } ?: "bn"
 
         window.statusBarColor = Color.rgb(7, 27, 54)
         window.navigationBarColor = Color.rgb(7, 27, 54)
@@ -81,7 +84,17 @@ class MainActivity : Activity() {
 
         val signedInUser = auth?.currentUser
         if (signedInUser != null) {
-            renderHome(signedInUser)
+            // Refresh verification status before showing the home screen.
+            signedInUser.reload().addOnCompleteListener {
+                val refreshedUser = auth?.currentUser
+                if (refreshedUser != null && refreshedUser.isEmailVerified) {
+                    renderHome(refreshedUser)
+                } else {
+                    auth?.signOut()
+                    renderLogin()
+                    statusText.text = labels().emailNotVerified
+                }
+            }
         } else {
             renderLogin()
             emailInput.setText(savedInstanceState?.getString(STATE_EMAIL).orEmpty())
@@ -96,8 +109,8 @@ class MainActivity : Activity() {
         }
     }
 
-    private fun labels(): Labels = when (language) {
-        "en" -> Labels(
+    private fun labels(): Labels = if (language == "en") {
+        Labels(
             "Welcome to SM CALL", "Sign in or create an account with email",
             "Email address", "Password (at least 6 characters)",
             "Log in", "Create account", "Forgot password?",
@@ -106,40 +119,14 @@ class MainActivity : Activity() {
             "Firebase is not connected. Check android/app/google-services.json.",
             "Please wait...", "Authentication failed: ", "Account created successfully.",
             "Password reset email sent. Check your inbox.",
+            "Verification email sent. Verify your email, then log in.",
+            "Your email is not verified. Check your inbox for the verification link.",
             "SM CALL Home", "Signed in as", "Chats", "Audio call", "Video call",
-            "Group video (up to 20)", "Sign out",
-            "This feature is not active yet. It will be added and tested later.",
-            "Profile saved."
+            "Group audio/video (up to 5 people)", "Sign out",
+            "This feature is not active yet. It will be added and tested later."
         )
-        "ar" -> Labels(
-            "مرحباً بك في SM CALL", "سجّل الدخول أو أنشئ حساباً بالبريد الإلكتروني",
-            "البريد الإلكتروني", "كلمة المرور (6 أحرف على الأقل)",
-            "تسجيل الدخول", "إنشاء حساب", "هل نسيت كلمة المرور؟",
-            "أدخل بريدك الإلكتروني.", "أدخل عنوان بريد إلكتروني صحيحاً.",
-            "أدخل كلمة المرور.", "يجب أن تتكون كلمة المرور من 6 أحرف على الأقل.",
-            "Firebase غير متصل. تحقق من ملف google-services.json.",
-            "يرجى الانتظار...", "فشلت المصادقة: ", "تم إنشاء الحساب بنجاح.",
-            "تم إرسال رسالة إعادة تعيين كلمة المرور. تحقق من بريدك.",
-            "الصفحة الرئيسية لـ SM CALL", "تم تسجيل الدخول باسم", "المحادثات",
-            "مكالمة صوتية", "مكالمة فيديو", "فيديو جماعي (حتى 20)", "تسجيل الخروج",
-            "هذه الميزة غير مفعّلة بعد. ستتم إضافتها واختبارها لاحقاً.",
-            "تم حفظ الملف الشخصي."
-        )
-        "hi" -> Labels(
-            "SM CALL में आपका स्वागत है", "ईमेल से लॉगिन करें या नया खाता बनाएँ",
-            "ईमेल पता", "पासवर्ड (कम से कम 6 अक्षर)",
-            "लॉगिन", "खाता बनाएँ", "पासवर्ड भूल गए?",
-            "अपना ईमेल पता लिखें।", "सही ईमेल पता लिखें।",
-            "पासवर्ड लिखें।", "पासवर्ड कम से कम 6 अक्षरों का होना चाहिए।",
-            "Firebase कनेक्ट नहीं है। google-services.json जाँचें।",
-            "कृपया प्रतीक्षा करें...", "लॉगिन विफल: ", "खाता सफलतापूर्वक बन गया।",
-            "पासवर्ड रीसेट ईमेल भेज दिया गया है। इनबॉक्स देखें।",
-            "SM CALL होम", "लॉगिन किया गया", "चैट", "ऑडियो कॉल", "वीडियो कॉल",
-            "ग्रुप वीडियो (अधिकतम 20)", "लॉगआउट",
-            "यह सुविधा अभी चालू नहीं है। इसे बाद में जोड़ा और जाँचा जाएगा।",
-            "प्रोफ़ाइल सेव हो गई।"
-        )
-        else -> Labels(
+    } else {
+        Labels(
             "স্বাগতম SM CALL-এ", "ইমেইল দিয়ে লগইন করুন অথবা নতুন অ্যাকাউন্ট খুলুন",
             "আপনার ইমেইল ঠিকানা", "পাসওয়ার্ড (কমপক্ষে ৬ অক্ষর)",
             "লগইন করুন", "নতুন অ্যাকাউন্ট তৈরি করুন", "পাসওয়ার্ড ভুলে গেছেন?",
@@ -148,10 +135,11 @@ class MainActivity : Activity() {
             "Firebase সংযুক্ত নেই। android/app/google-services.json পরীক্ষা করুন।",
             "অপেক্ষা করুন...", "লগইন করা যায়নি: ", "অ্যাকাউন্ট তৈরি হয়েছে।",
             "পাসওয়ার্ড রিসেটের ইমেইল পাঠানো হয়েছে। ইনবক্স দেখুন।",
+            "যাচাই ইমেইল পাঠানো হয়েছে। ইমেইল যাচাই করে তারপর লগইন করুন।",
+            "আপনার ইমেইল এখনো যাচাই হয়নি। ইনবক্সে যাচাই লিংক দেখুন।",
             "SM CALL হোম", "লগইন করেছেন", "চ্যাট", "অডিও কল", "ভিডিও কল",
-            "গ্রুপ ভিডিও (সর্বোচ্চ ২০ জন)", "লগআউট",
-            "এই সুবিধাটি এখনো চালু হয়নি। পরে তৈরি ও পরীক্ষা করা হবে।",
-            "প্রোফাইল সংরক্ষণ হয়েছে।"
+            "গ্রুপ অডিও/ভিডিও (সর্বোচ্চ ৫ জন)", "লগআউট",
+            "এই সুবিধাটি এখনো চালু হয়নি। পরে তৈরি ও পরীক্ষা করা হবে।"
         )
     }
 
@@ -171,8 +159,7 @@ class MainActivity : Activity() {
                 GradientDrawable.Orientation.TL_BR,
                 intArrayOf(Color.rgb(7, 27, 54), Color.rgb(18, 63, 112))
             )
-            layoutDirection = if (language == "ar") View.LAYOUT_DIRECTION_RTL
-                else View.LAYOUT_DIRECTION_LTR
+            layoutDirection = View.LAYOUT_DIRECTION_LTR
         }
         scroll.addView(page, ViewGroup.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
@@ -197,12 +184,7 @@ class MainActivity : Activity() {
             0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f
         ))
         val languageButton = Button(this).apply {
-            text = when (language) {
-                "en" -> "English"
-                "ar" -> "العربية"
-                "hi" -> "हिन्दी"
-                else -> "বাংলা"
-            }
+            text = if (language == "en") "English" else "বাংলা"
             isAllCaps = false
             setTextColor(Color.WHITE)
             background = rounded(Color.rgb(28, 78, 125), 14)
@@ -231,7 +213,7 @@ class MainActivity : Activity() {
             textSize = size
             setTextColor(Color.WHITE)
             if (bold) typeface = Typeface.DEFAULT_BOLD
-            gravity = if (language == "ar") Gravity.RIGHT else Gravity.LEFT
+            gravity = Gravity.LEFT
         }
         page.addView(view, LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
@@ -321,8 +303,8 @@ class MainActivity : Activity() {
     private fun changeLanguage() {
         val currentEmail = if (::emailInput.isInitialized) emailInput.text.toString() else ""
         val currentPassword = if (::passwordInput.isInitialized) passwordInput.text.toString() else ""
-        val currentIndex = languages.indexOf(language).coerceAtLeast(0)
-        language = languages[(currentIndex + 1) % languages.size]
+        language = if (language == "bn") "en" else "bn"
+
         val signedInUser = auth?.currentUser
         if (signedInUser != null) {
             renderHome(signedInUser)
@@ -356,7 +338,7 @@ class MainActivity : Activity() {
             statusText.text = copy.enterPassword
             return
         }
-        if (createAccount && password.length < 6) {
+        if (password.length < 6) {
             statusText.text = copy.passwordTooShort
             return
         }
@@ -369,23 +351,56 @@ class MainActivity : Activity() {
 
         setAuthButtonsEnabled(false)
         statusText.text = copy.working
+
         val task = if (createAccount) {
             currentAuth.createUserWithEmailAndPassword(email, password)
         } else {
             currentAuth.signInWithEmailAndPassword(email, password)
         }
+
         task.addOnSuccessListener { result ->
             val user = result.user
-            if (user != null) {
-                saveProfile(user, copy.accountCreated)
-            } else {
+            if (user == null) {
                 setAuthButtonsEnabled(true)
                 statusText.text = copy.loginFailed
+            } else if (createAccount) {
+                sendVerificationAndSignOut(user, currentAuth, copy)
+            } else {
+                // Reload so Firebase returns the latest email-verification state.
+                user.reload().addOnCompleteListener {
+                    val refreshedUser = currentAuth.currentUser
+                    if (refreshedUser != null && refreshedUser.isEmailVerified) {
+                        saveProfile(refreshedUser, copy.accountCreated)
+                    } else if (refreshedUser != null) {
+                        sendVerificationAndSignOut(refreshedUser, currentAuth, copy)
+                    } else {
+                        setAuthButtonsEnabled(true)
+                        statusText.text = copy.loginFailed
+                    }
+                }
             }
         }.addOnFailureListener { error ->
             setAuthButtonsEnabled(true)
             statusText.text = localizedAuthError(error)
         }
+    }
+
+    private fun sendVerificationAndSignOut(
+        user: FirebaseUser,
+        currentAuth: FirebaseAuth,
+        copy: Labels
+    ) {
+        statusText.text = copy.working
+        user.sendEmailVerification()
+            .addOnCompleteListener { task ->
+                currentAuth.signOut()
+                renderLogin()
+                statusText.text = if (task.isSuccessful) {
+                    copy.verificationSent
+                } else {
+                    localizedAuthError(task.exception ?: Exception("Email verification failed"))
+                }
+            }
     }
 
     private fun sendPasswordReset() {
@@ -419,37 +434,23 @@ class MainActivity : Activity() {
 
     private fun localizedAuthError(error: Throwable): String {
         val code = (error as? FirebaseAuthException)?.errorCode.orEmpty()
-        val message = when (code) {
-            "ERROR_EMAIL_ALREADY_IN_USE" -> when (language) {
-                "en" -> "This email is already registered. Please log in."
-                "ar" -> "هذا البريد مسجل بالفعل. يرجى تسجيل الدخول."
-                "hi" -> "यह ईमेल पहले से पंजीकृत है। लॉगिन करें।"
-                else -> "এই ইমেইল দিয়ে আগে অ্যাকাউন্ট খোলা হয়েছে। লগইন করুন।"
-            }
+        return when (code) {
+            "ERROR_EMAIL_ALREADY_IN_USE" ->
+                if (language == "en") "This email is already registered. Please log in."
+                else "এই ইমেইল দিয়ে আগে অ্যাকাউন্ট খোলা হয়েছে। লগইন করুন।"
             "ERROR_INVALID_EMAIL" -> labels().invalidEmail
             "ERROR_WEAK_PASSWORD" -> labels().passwordTooShort
             "ERROR_USER_NOT_FOUND", "ERROR_WRONG_PASSWORD", "ERROR_INVALID_CREDENTIAL" ->
-                when (language) {
-                    "en" -> "Email or password is incorrect."
-                    "ar" -> "البريد الإلكتروني أو كلمة المرور غير صحيحة."
-                    "hi" -> "ईमेल या पासवर्ड गलत है।"
-                    else -> "ইমেইল অথবা পাসওয়ার্ড ভুল।"
-                }
-            "ERROR_TOO_MANY_REQUESTS" -> when (language) {
-                "en" -> "Too many attempts. Please try again later."
-                "ar" -> "محاولات كثيرة. حاول مرة أخرى لاحقاً."
-                "hi" -> "बहुत अधिक प्रयास। बाद में कोशिश करें।"
-                else -> "অনেকবার চেষ্টা হয়েছে। কিছুক্ষণ পরে আবার চেষ্টা করুন।"
-            }
-            "ERROR_NETWORK_REQUEST_FAILED" -> when (language) {
-                "en" -> "Network error. Check your internet connection."
-                "ar" -> "خطأ في الشبكة. تحقق من اتصال الإنترنت."
-                "hi" -> "नेटवर्क त्रुटि। इंटरनेट जाँचें।"
-                else -> "ইন্টারনেট সংযোগ পরীক্ষা করুন।"
-            }
+                if (language == "en") "Email or password is incorrect."
+                else "ইমেইল অথবা পাসওয়ার্ড ভুল।"
+            "ERROR_TOO_MANY_REQUESTS" ->
+                if (language == "en") "Too many attempts. Please try again later."
+                else "অনেকবার চেষ্টা হয়েছে। কিছুক্ষণ পরে আবার চেষ্টা করুন।"
+            "ERROR_NETWORK_REQUEST_FAILED" ->
+                if (language == "en") "Network error. Check your internet connection."
+                else "ইন্টারনেট সংযোগ পরীক্ষা করুন।"
             else -> labels().loginFailed + (error.localizedMessage ?: error.javaClass.simpleName)
         }
-        return message
     }
 
     private fun saveProfile(user: FirebaseUser, successMessage: String) {
@@ -459,18 +460,9 @@ class MainActivity : Activity() {
             "name" to (user.email?.substringBefore("@") ?: "SM CALL User"),
             "updatedAt" to FieldValue.serverTimestamp()
         )
-        val privateProfile = hashMapOf<String, Any>(
-            "uid" to user.uid,
-            "phone" to (user.phoneNumber ?: ""),
-            "updatedAt" to FieldValue.serverTimestamp()
-        )
 
         database.collection("users").document(user.uid)
             .set(publicProfile, SetOptions.merge())
-            .onSuccessTask {
-                database.collection("privateUsers").document(user.uid)
-                    .set(privateProfile, SetOptions.merge())
-            }
             .addOnSuccessListener {
                 renderHome(user)
                 Toast.makeText(this, successMessage, Toast.LENGTH_SHORT).show()
@@ -500,7 +492,7 @@ class MainActivity : Activity() {
         })
         addButton(page, copy.audio, { showNotReady(copy.notReady) }, true)
         addButton(page, copy.video, { showNotReady(copy.notReady) }, true)
-        addButton(page, copy.groupVideo, { showNotReady(copy.notReady) }, true)
+        addButton(page, copy.groupCall, { showNotReady(copy.notReady) }, true)
         addSpace(page, 16)
         addButton(page, copy.logout, {
             auth?.signOut()
