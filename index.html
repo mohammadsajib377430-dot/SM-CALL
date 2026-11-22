@@ -661,7 +661,7 @@ async function showHome() {
     document.getElementById("userGreeting").textContent =
       "স্বাগতম, " + demoProfileName + " (ডেমো)";
     document.getElementById("profileName").textContent = demoProfileName;
-    document.getElementById("profilePhone").textContent =
+    document.getElementById("profileEmail").textContent =
       "ডেমো অ্যাকাউন্ট — ফোন নম্বর যাচাই হয়নি";
     document.getElementById("profileUID").textContent =
       "Demo ID: " + currentUser.uid;
@@ -679,7 +679,7 @@ async function showHome() {
     data.name || "SM CALL User";
 
   document.getElementById("profilePhone").textContent =
-    privateData.phone || currentUser.phoneNumber || "";
+    currentUser.email || "";
 
   document.getElementById("profileUID").textContent =
     "User ID: " + currentUser.uid;
