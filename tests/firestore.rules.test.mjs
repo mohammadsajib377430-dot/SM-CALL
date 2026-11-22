@@ -39,7 +39,17 @@ beforeEach(async () => {
 });
 
 function userDb(uid) {
-  return testEnv.authenticatedContext(uid).firestore();
+  return testEnv.authenticatedContext(uid, {
+    email: `${uid}@example.com`,
+    email_verified: true
+  }).firestore();
+}
+
+function unverifiedUserDb(uid) {
+  return testEnv.authenticatedContext(uid, {
+    email: `${uid}@example.com`,
+    email_verified: false
+  }).firestore();
 }
 
 function chatData(members, type = "group", name = "Test group") {
@@ -52,13 +62,15 @@ function chatData(members, type = "group", name = "Test group") {
   return data;
 }
 
-test("a signed-in user can create and read their own public profile", async () => {
+test("an unverified account cannot access Firestore", async () => {\n  const pending = unverifiedUserDb("pending");\n  await assertFails(getDoc(doc(pending, "users", "someone")));\n  await assertFails(setDoc(doc(pending, "users", "pending"), {\n    uid: "pending", name: "Pending", email: "pending@example.com",\n    emailVerified: false, updatedAt: serverTimestamp()\n  }));\n});\n\ntest("a signed-in user can create and read their own public profile", async () => {
   const alice = userDb("alice");
   const profile = doc(alice, "users", "alice");
 
   await assertSucceeds(setDoc(profile, {
     uid: "alice",
     name: "Alice",
+    email: "alice@example.com",
+    emailVerified: true,
     updatedAt: serverTimestamp()
   }));
 
