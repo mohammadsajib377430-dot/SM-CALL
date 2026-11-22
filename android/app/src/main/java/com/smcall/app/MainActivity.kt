@@ -17,120 +17,23 @@ import android.widget.TextView
 import android.widget.Toast
 import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthException
 import com.google.firebase.auth.FirebaseUser
-import com.google.firebase.auth.UserProfileChangeRequest
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
 
 class MainActivity : Activity() {
     private var auth: FirebaseAuth? = null
     private var language = "bn"
-    private var currentScreen = "login"
     private lateinit var emailInput: EditText
     private lateinit var passwordInput: EditText
     private lateinit var nameInput: EditText
     private lateinit var confirmPasswordInput: EditText
     private lateinit var statusText: TextView
+    private lateinit var primaryButton: Button
 
     private val languages = listOf("bn", "en", "ar", "hi")
-
-    private data class Copy(
-        val welcome: String,
-        val intro: String,
-        val name: String,
-        val email: String,
-        val password: String,
-        val confirmPassword: String,
-        val login: String,
-        val createAccount: String,
-        val newAccount: String,
-        val forgotPassword: String,
-        val verifyTitle: String,
-        val verifyBody: String,
-        val resend: String,
-        val refresh: String,
-        val logout: String,
-        val home: String,
-        val chats: String,
-        val audio: String,
-        val video: String,
-        val groupAudio: String,
-        val groupVideo: String,
-        val firebaseMissing: String,
-        val invalidFields: String,
-        val passwordShort: String,
-        val passwordMismatch: String,
-        val signupSent: String,
-        val verificationSent: String,
-        val notVerified: String,
-        val verified: String,
-        val resetSent: String,
-        val featureUnavailable: String,
-        val profileError: String
-    )
-
-    private fun copy(): Copy = when (language) {
-        "en" -> Copy(
-            "Welcome to SM CALL", "Sign in with email and password",
-            "Your name", "Email address", "Password", "Confirm password",
-            "Sign in", "Create account", "Create a new account",
-            "Forgot password?", "Verify your email",
-            "Open the verification link sent to:", "Resend verification email",
-            "I verified — check again", "Sign out", "SM CALL Home",
-            "Chats", "Audio call", "Video call", "Group audio (max 5)",
-            "Group video (max 5)", "Firebase is not configured. Add android/app/google-services.json.",
-            "Fill in all required fields.", "Password must be at least 6 characters.",
-            "Passwords do not match.", "Account created. Check your email.",
-            "Verification email sent.", "Email is not verified yet. Check Inbox or Spam.",
-            "Email verified.", "Password reset email sent.",
-            "This feature is not implemented yet.", "Profile could not be saved: "
-        )
-        "ar" -> Copy(
-            "مرحباً بك في SM CALL", "سجّل الدخول بالبريد الإلكتروني وكلمة المرور",
-            "اسمك", "البريد الإلكتروني", "كلمة المرور", "تأكيد كلمة المرور",
-            "تسجيل الدخول", "إنشاء حساب", "إنشاء حساب جديد",
-            "هل نسيت كلمة المرور؟", "تحقق من بريدك الإلكتروني",
-            "افتح رابط التحقق المرسل إلى:", "إعادة إرسال رسالة التحقق",
-            "لقد تحققت — تحقق مرة أخرى", "تسجيل الخروج", "الصفحة الرئيسية",
-            "المحادثات", "مكالمة صوتية", "مكالمة فيديو", "صوت جماعي (5 كحد أقصى)",
-            "فيديو جماعي (5 كحد أقصى)", "Firebase غير مُعد. أضف google-services.json إلى android/app.",
-            "أكمل جميع الحقول المطلوبة.", "يجب أن تتكون كلمة المرور من 6 أحرف على الأقل.",
-            "كلمتا المرور غير متطابقتين.", "تم إنشاء الحساب. تحقق من بريدك.",
-            "تم إرسال رسالة التحقق.", "لم يتم التحقق من البريد بعد. افحص الوارد أو الرسائل غير المرغوب فيها.",
-            "تم التحقق من البريد.", "تم إرسال رابط إعادة تعيين كلمة المرور.",
-            "هذه الميزة لم تُنفذ بعد.", "تعذر حفظ الملف الشخصي: "
-        )
-        "hi" -> Copy(
-            "SM CALL में आपका स्वागत है", "ईमेल और पासवर्ड से लॉगिन करें",
-            "आपका नाम", "ईमेल पता", "पासवर्ड", "पासवर्ड की पुष्टि करें",
-            "लॉगिन", "खाता बनाएँ", "नया खाता बनाएँ",
-            "पासवर्ड भूल गए?", "ईमेल सत्यापित करें",
-            "इस पते पर भेजे गए सत्यापन लिंक को खोलें:", "सत्यापन ईमेल फिर भेजें",
-            "मैंने सत्यापित किया — फिर जाँचें", "लॉगआउट", "SM CALL होम",
-            "चैट", "ऑडियो कॉल", "वीडियो कॉल", "ग्रुप ऑडियो (अधिकतम 5)",
-            "ग्रुप वीडियो (अधिकतम 5)", "Firebase कॉन्फ़िगर नहीं है। android/app में google-services.json जोड़ें।",
-            "सभी ज़रूरी जानकारी भरें।", "पासवर्ड कम से कम 6 अक्षरों का होना चाहिए।",
-            "दोनों पासवर्ड मेल नहीं खाते।", "खाता बन गया। ईमेल देखें।",
-            "सत्यापन ईमेल भेज दिया गया।", "ईमेल अभी सत्यापित नहीं है। Inbox या Spam देखें।",
-            "ईमेल सत्यापित है।", "पासवर्ड रीसेट ईमेल भेज दिया गया।",
-            "यह सुविधा अभी लागू नहीं है।", "प्रोफ़ाइल सेव नहीं हुई: "
-        )
-        else -> Copy(
-            "স্বাগতম SM CALL-এ", "ইমেইল ও পাসওয়ার্ড দিয়ে লগইন করুন",
-            "আপনার নাম", "ইমেইল ঠিকানা", "পাসওয়ার্ড", "পাসওয়ার্ড নিশ্চিত করুন",
-            "লগইন", "অ্যাকাউন্ট তৈরি", "নতুন অ্যাকাউন্ট তৈরি করুন",
-            "পাসওয়ার্ড ভুলে গেছেন?", "ইমেইল যাচাই করুন",
-            "এই ঠিকানায় পাঠানো ভেরিফিকেশন লিংক খুলুন:", "ভেরিফিকেশন ইমেইল আবার পাঠান",
-            "আমি যাচাই করেছি — আবার পরীক্ষা করুন", "লগআউট", "SM CALL হোম",
-            "চ্যাট", "অডিও কল", "ভিডিও কল", "গ্রুপ অডিও (সর্বোচ্চ ৫ জন)",
-            "গ্রুপ ভিডিও (সর্বোচ্চ ৫ জন)", "Firebase সেটআপ করা নেই। android/app ফোল্ডারে google-services.json যোগ করুন।",
-            "সব প্রয়োজনীয় তথ্য পূরণ করুন।", "পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে।",
-            "দুইটি পাসওয়ার্ড মিলছে না।", "অ্যাকাউন্ট তৈরি হয়েছে। ইমেইল দেখুন।",
-            "ভেরিফিকেশন ইমেইল পাঠানো হয়েছে।", "ইমেইল এখনো যাচাই হয়নি। Inbox বা Spam ফোল্ডার দেখুন।",
-            "ইমেইল যাচাই হয়েছে।", "পাসওয়ার্ড রিসেট ইমেইল পাঠানো হয়েছে।",
-            "এই ফিচারটি এখনো তৈরি হয়নি।", "প্রোফাইল সংরক্ষণ হয়নি: "
-        )
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -140,11 +43,7 @@ class MainActivity : Activity() {
         auth = if (FirebaseApp.getApps(this).isNotEmpty()) FirebaseAuth.getInstance() else null
 
         val user = auth?.currentUser
-        if (user == null) {
-            renderLogin()
-        } else {
-            verifySignedInUser(user)
-        }
+        if (user == null) renderLogin() else refreshAndRoute(user)
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -152,325 +51,268 @@ class MainActivity : Activity() {
         super.onSaveInstanceState(outState)
     }
 
-    private fun dp(value: Int): Int = (value * resources.displayMetrics.density).toInt()
+    private fun tr(bn: String, en: String, ar: String, hi: String): String =
+        when (language) { "en" -> en; "ar" -> ar; "hi" -> hi; else -> bn }
 
-    private fun page(): LinearLayout {
-        val scroll = ScrollView(this).apply {
-            isFillViewport = true
-            isVerticalScrollBarEnabled = false
-        }
-        val content = LinearLayout(this).apply {
+    private fun baseScreen(): LinearLayout {
+        val scroll = ScrollView(this).apply { isFillViewport = true; isVerticalScrollBarEnabled = false }
+        val page = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(24), dp(28), dp(24), dp(32))
-            background = GradientDrawable(
-                GradientDrawable.Orientation.TL_BR,
-                intArrayOf(Color.rgb(7, 27, 54), Color.rgb(18, 63, 112))
-            )
+            minimumHeight = resources.displayMetrics.heightPixels
             layoutDirection = if (language == "ar") View.LAYOUT_DIRECTION_RTL else View.LAYOUT_DIRECTION_LTR
+            background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
+                intArrayOf(Color.rgb(7, 27, 54), Color.rgb(18, 63, 112)))
         }
-        scroll.addView(content, ViewGroup.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
-        ))
+        scroll.addView(page, ViewGroup.LayoutParams(-1, -2))
         setContentView(scroll)
-        val header = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-        }
+        return page
+    }
+
+    private fun dp(value: Int) = (value * resources.displayMetrics.density).toInt()
+
+    private fun addBrand(page: LinearLayout) {
+        val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
         val brand = TextView(this).apply {
-            text = "SM CALL"
-            textSize = 25f
-            setTextColor(Color.WHITE)
-            typeface = Typeface.DEFAULT_BOLD
+            text = "SM CALL"; textSize = 25f; setTextColor(Color.WHITE); typeface = Typeface.DEFAULT_BOLD
         }
-        header.addView(brand, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
-        val langButton = Button(this).apply {
-            text = when (language) { "en" -> "English"; "ar" -> "العربية"; "hi" -> "हिन्दी"; else -> "বাংলা" }
-            isAllCaps = false
-            setTextColor(Color.WHITE)
-            background = rounded(Color.rgb(28, 78, 125))
+        row.addView(brand, LinearLayout.LayoutParams(0, -2, 1f))
+        val languageButton = Button(this).apply {
+            text = tr("বাংলা", "English", "العربية", "हिन्दी"); isAllCaps = false
+            setTextColor(Color.WHITE); background = rounded(Color.rgb(28, 78, 125), 14)
             setOnClickListener { changeLanguage() }
         }
-        header.addView(langButton)
-        content.addView(header)
-        space(content, 28)
-        return content
+        row.addView(languageButton)
+        page.addView(row)
+        addSpace(page, 28)
     }
 
-    private fun rounded(color: Int) = GradientDrawable().apply {
-        setColor(color)
-        cornerRadius = dp(14).toFloat()
+    private fun rounded(color: Int, radius: Int) = GradientDrawable().apply {
+        setColor(color); cornerRadius = dp(radius).toFloat()
     }
 
-    private fun space(parent: LinearLayout, height: Int) {
-        parent.addView(View(this), LinearLayout.LayoutParams(1, dp(height)))
+    private fun addSpace(page: LinearLayout, height: Int) {
+        page.addView(View(this), LinearLayout.LayoutParams(1, dp(height)))
     }
 
-    private fun text(parent: LinearLayout, value: String, size: Float, bold: Boolean = false): TextView {
+    private fun addText(page: LinearLayout, value: String, size: Float, bold: Boolean = false): TextView {
         val view = TextView(this).apply {
-            text = value
-            textSize = size
-            setTextColor(Color.WHITE)
+            text = value; textSize = size; setTextColor(Color.WHITE)
             gravity = if (language == "ar") Gravity.RIGHT else Gravity.LEFT
             if (bold) typeface = Typeface.DEFAULT_BOLD
         }
-        parent.addView(view, LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
-        ))
+        page.addView(view, LinearLayout.LayoutParams(-1, -2))
         return view
     }
 
-    private fun field(parent: LinearLayout, hint: String, type: Int): EditText {
-        val input = EditText(this).apply {
-            this.hint = hint
-            inputType = type
-            textSize = 16f
-            setSingleLine(true)
-            setTextColor(Color.rgb(12, 35, 61))
-            setHintTextColor(Color.rgb(90, 110, 130))
+    private fun addInput(page: LinearLayout, hint: String, type: Int): EditText {
+        val field = EditText(this).apply {
+            this.hint = hint; inputType = type; textSize = 16f; setSingleLine(true)
+            setTextColor(Color.rgb(12, 35, 61)); setHintTextColor(Color.rgb(90, 110, 130))
             setPadding(dp(16), dp(12), dp(16), dp(12))
             background = GradientDrawable().apply {
-                setColor(Color.WHITE)
-                cornerRadius = dp(14).toFloat()
+                setColor(Color.WHITE); cornerRadius = dp(14).toFloat()
                 setStroke(dp(1), Color.rgb(190, 208, 225))
             }
         }
-        val params = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(54))
-        params.topMargin = dp(12)
-        parent.addView(input, params)
-        return input
+        val params = LinearLayout.LayoutParams(-1, dp(54)).apply { topMargin = dp(12) }
+        page.addView(field, params)
+        return field
     }
 
-    private fun button(parent: LinearLayout, title: String, secondary: Boolean = false, action: () -> Unit) {
-        val control = Button(this).apply {
-            text = title
-            isAllCaps = false
-            textSize = 15f
-            setTextColor(Color.WHITE)
-            background = rounded(if (secondary) Color.rgb(28, 78, 125) else Color.rgb(22, 150, 130))
+    private fun addButton(page: LinearLayout, label: String, secondary: Boolean = false, action: () -> Unit): Button {
+        val button = Button(this).apply {
+            text = label; isAllCaps = false; textSize = 15f; setTextColor(Color.WHITE)
+            background = rounded(if (secondary) Color.rgb(28, 78, 125) else Color.rgb(22, 150, 130), 14)
             setOnClickListener { action() }
         }
-        val params = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(54))
-        params.topMargin = dp(12)
-        parent.addView(control, params)
+        page.addView(button, LinearLayout.LayoutParams(-1, dp(54)).apply { topMargin = dp(12) })
+        return button
     }
 
-    private fun status(parent: LinearLayout): TextView {
-        space(parent, 12)
-        return text(parent, "", 14f)
+    private fun addStatus(page: LinearLayout) {
+        statusText = addText(page, "", 14f)
+        addSpace(page, 6)
     }
 
-    private fun firebaseReady(): Boolean {
-        if (auth != null) return true
-        statusText.text = copy().firebaseMissing
-        return false
+    private fun firebaseReady(): FirebaseAuth? {
+        val current = auth
+        if (current == null) {
+            statusText.text = tr(
+                "Firebase সংযুক্ত হয়নি। আগে Firebase Android সেটআপ করতে হবে।",
+                "Firebase is not configured. Complete Firebase Android setup first.",
+                "لم يتم إعداد Firebase بعد.",
+                "Firebase अभी सेट नहीं है।"
+            )
+        }
+        return current
     }
 
     private fun renderLogin() {
-        currentScreen = "login"
-        val c = copy()
-        val root = page()
-        text(root, c.welcome, 27f, true)
-        space(root, 8)
-        text(root, c.intro, 16f)
-        emailInput = field(root, c.email, InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS)
-        passwordInput = field(root, c.password, InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD)
-        statusText = status(root)
-        button(root, c.login) { login() }
-        button(root, c.forgotPassword, true) { resetPassword() }
-        button(root, c.newAccount, true) { renderSignup() }
+        val page = baseScreen(); addBrand(page)
+        addText(page, tr("স্বাগতম SM CALL-এ", "Welcome to SM CALL", "مرحباً بك في SM CALL", "SM CALL में आपका स्वागत है"), 27f, true)
+        addText(page, tr("ইমেইল ও পাসওয়ার্ড দিয়ে লগইন করুন।", "Sign in with your email and password.", "سجّل الدخول بالبريد الإلكتروني وكلمة المرور.", "ईमेल और पासवर्ड से लॉगिन करें।"), 16f)
+        addSpace(page, 18)
+        emailInput = addInput(page, tr("ইমেইল ঠিকানা", "Email address", "البريد الإلكتروني", "ईमेल पता"), InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS or InputType.TYPE_CLASS_TEXT)
+        passwordInput = addInput(page, tr("পাসওয়ার্ড", "Password", "كلمة المرور", "पासवर्ड"), InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD)
+        addStatus(page)
+        primaryButton = addButton(page, tr("লগইন", "Sign in", "تسجيل الدخول", "लॉगिन")) { login() }
+        addButton(page, tr("নতুন অ্যাকাউন্ট তৈরি করুন", "Create account", "إنشاء حساب جديد", "नया खाता बनाएँ"), true) { renderSignup(emailInput.text.toString()) }
+        addButton(page, tr("পাসওয়ার্ড ভুলে গেছেন?", "Forgot password?", "هل نسيت كلمة المرور؟", "पासवर्ड भूल गए?"), true) { resetPassword() }
+        addSpace(page, 18)
+        addText(page, tr("শুধু ইমেইল লগইন। ফোন OTP ব্যবহার করা হয় না।", "Email and password only. No phone OTP.", "البريد الإلكتروني فقط، دون رمز هاتف.", "केवल ईमेल लॉगिन। फोन OTP नहीं।"), 12f)
     }
 
-    private fun renderSignup() {
-        currentScreen = "signup"
-        val c = copy()
-        val root = page()
-        text(root, c.createAccount, 27f, true)
-        nameInput = field(root, c.name, InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PERSON_NAME)
-        emailInput = field(root, c.email, InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS)
-        passwordInput = field(root, c.password, InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD)
-        confirmPasswordInput = field(root, c.confirmPassword, InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD)
-        statusText = status(root)
-        button(root, c.createAccount) { createAccount() }
-        button(root, c.login, true) { renderLogin() }
+    private fun renderSignup(prefill: String = "") {
+        val page = baseScreen(); addBrand(page)
+        addText(page, tr("নতুন অ্যাকাউন্ট", "Create account", "إنشاء حساب", "नया खाता"), 27f, true)
+        nameInput = addInput(page, tr("আপনার নাম", "Your name", "اسمك", "आपका नाम"), InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_WORDS)
+        emailInput = addInput(page, tr("ইমেইল ঠিকানা", "Email address", "البريد الإلكتروني", "ईमेल पता"), InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS)
+        emailInput.setText(prefill)
+        passwordInput = addInput(page, tr("পাসওয়ার্ড (কমপক্ষে ৬ অক্ষর)", "Password (at least 6 characters)", "كلمة المرور (6 أحرف على الأقل)", "पासवर्ड (कम से कम 6 अक्षर)"), InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD)
+        confirmPasswordInput = addInput(page, tr("পাসওয়ার্ড আবার লিখুন", "Confirm password", "تأكيد كلمة المرور", "पासवर्ड दोबारा लिखें"), InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD)
+        addStatus(page)
+        primaryButton = addButton(page, tr("অ্যাকাউন্ট তৈরি করুন", "Create account", "إنشاء حساب", "खाता बनाएँ")) { createAccount() }
+        addButton(page, tr("লগইন পাতায় ফিরে যান", "Back to sign in", "العودة لتسجيل الدخول", "लॉगिन पर लौटें"), true) { renderLogin() }
     }
 
     private fun renderVerification(user: FirebaseUser) {
-        currentScreen = "verification"
-        val c = copy()
-        val root = page()
-        text(root, c.verifyTitle, 27f, true)
-        space(root, 12)
-        text(root, c.verifyBody, 16f)
-        text(root, user.email ?: "", 16f, true)
-        space(root, 12)
-        text(root, "Spam / Junk ফোল্ডারও পরীক্ষা করুন।", 14f)
-        statusText = status(root)
-        button(root, c.resend) { resendVerification() }
-        button(root, c.refresh) { refreshVerification() }
-        button(root, c.logout, true) { signOut() }
+        val page = baseScreen(); addBrand(page)
+        addText(page, tr("ইমেইল যাচাই করুন", "Verify your email", "تحقق من بريدك الإلكتروني", "ईमेल सत्यापित करें"), 27f, true)
+        addText(page, tr("আমরা এই ঠিকানায় যাচাই লিংক পাঠিয়েছি:", "We sent a verification link to:", "أرسلنا رابط التحقق إلى:", "हमने इस पते पर सत्यापन लिंक भेजा है:"), 16f)
+        addText(page, user.email.orEmpty(), 16f, true)
+        addSpace(page, 12)
+        addText(page, tr("Inbox না পেলে Spam/Junk ফোল্ডার দেখুন। লিংকে চাপার পর নিচের Reload চাপুন।", "Check Spam/Junk if it is not in your inbox. After clicking the link, tap Reload.", "تحقق من مجلد Spam/Junk ثم اضغط إعادة التحميل بعد فتح الرابط.", "Inbox में न मिले तो Spam/Junk देखें। लिंक खोलने के बाद Reload दबाएँ।"), 14f)
+        addStatus(page)
+        addButton(page, tr("আবার যাচাই ইমেইল পাঠান", "Resend verification email", "إعادة إرسال رسالة التحقق", "सत्यापन ईमेल फिर भेजें")) { resendVerification() }
+        addButton(page, tr("আমি যাচাই করেছি / Reload", "I verified / Reload", "لقد تحققت / إعادة تحميل", "मैंने सत्यापित किया / Reload"), true) { refreshVerification() }
+        addButton(page, tr("লগআউট", "Sign out", "تسجيل الخروج", "लॉगआउट"), true) { auth?.signOut(); renderLogin() }
     }
 
     private fun renderHome(user: FirebaseUser) {
-        currentScreen = "home"
-        val c = copy()
-        val root = page()
-        text(root, c.home, 27f, true)
-        space(root, 8)
-        text(root, user.email ?: "", 15f)
-        button(root, c.chats) { showFeatureUnavailable() }
-        button(root, c.audio, true) { showFeatureUnavailable() }
-        button(root, c.video, true) { showFeatureUnavailable() }
-        button(root, c.groupAudio, true) { showFeatureUnavailable() }
-        button(root, c.groupVideo, true) { showFeatureUnavailable() }
-        button(root, c.logout, true) { signOut() }
+        val page = baseScreen(); addBrand(page)
+        addText(page, tr("SM CALL হোম", "SM CALL Home", "الصفحة الرئيسية", "SM CALL होम"), 27f, true)
+        addText(page, user.email.orEmpty(), 15f)
+        addSpace(page, 18)
+        addText(page, tr("ইমেইল যাচাই সম্পন্ন।", "Email verified.", "تم التحقق من البريد.", "ईमेल सत्यापित है।"), 15f)
+        addButton(page, tr("চ্যাট", "Chats", "المحادثات", "चैट")) { showNotReady() }
+        addButton(page, tr("অডিও কল", "Audio call", "مكالمة صوتية", "ऑडियो कॉल"), true) { showNotReady() }
+        addButton(page, tr("ভিডিও কল", "Video call", "مكالمة فيديو", "वीडियो कॉल"), true) { showNotReady() }
+        addButton(page, tr("গ্রুপ অডিও / ভিডিও কল (সর্বোচ্চ ৫ জন)", "Group audio / video (max 5)", "مكالمة جماعية (5 كحد أقصى)", "ग्रुप कॉल (अधिकतम 5)"), true) { showNotReady() }
+        addButton(page, tr("লগআউট", "Sign out", "تسجيل الخروج", "लॉगआउट"), true) { auth?.signOut()?.addOnCompleteListener { renderLogin() } }
     }
 
-    private fun changeLanguage() {
-        val i = languages.indexOf(language).coerceAtLeast(0)
-        language = languages[(i + 1) % languages.size]
-        when (currentScreen) {
-            "signup" -> renderSignup()
-            "verification" -> auth?.currentUser?.let { renderVerification(it) } ?: renderLogin()
-            "home" -> auth?.currentUser?.let { renderHome(it) } ?: renderLogin()
-            else -> renderLogin()
-        }
-    }
-
-    private fun createAccount() {
-        val c = copy()
-        val name = nameInput.text.toString().trim()
-        val email = emailInput.text.toString().trim()
-        val password = passwordInput.text.toString()
-        val confirmation = confirmPasswordInput.text.toString()
-        if (!firebaseReady()) return
-        if (name.isBlank() || email.isBlank() || password.isBlank() || confirmation.isBlank()) {
-            statusText.text = c.invalidFields
-            return
-        }
-        if (password.length < 6) {
-            statusText.text = c.passwordShort
-            return
-        }
-        if (password != confirmation) {
-            statusText.text = c.passwordMismatch
-            return
-        }
-        statusText.text = "..."
-        auth!!.createUserWithEmailAndPassword(email, password)
-            .addOnSuccessListener { result ->
-                val user = result.user
-                if (user == null) {
-                    statusText.text = c.invalidFields
-                    return@addOnSuccessListener
-                }
-                val profile = UserProfileChangeRequest.Builder().setDisplayName(name).build()
-                user.updateProfile(profile).addOnCompleteListener {
-                    user.sendEmailVerification()
-                        .addOnSuccessListener {
-                            statusText.text = c.signupSent
-                            renderVerification(user)
-                        }
-                        .addOnFailureListener { error -> statusText.text = error.localizedMessage ?: c.invalidFields }
-                }
-            }
-            .addOnFailureListener { error -> statusText.text = error.localizedMessage ?: c.invalidFields }
+    private fun showNotReady() {
+        Toast.makeText(this, tr("এই ফিচার এখনো তৈরি হয়নি।", "This feature is not implemented yet.", "هذه الميزة لم تُنفذ بعد.", "यह सुविधा अभी लागू नहीं है।"), Toast.LENGTH_LONG).show()
     }
 
     private fun login() {
-        val c = copy()
+        val current = firebaseReady() ?: return
         val email = emailInput.text.toString().trim()
         val password = passwordInput.text.toString()
-        if (!firebaseReady()) return
-        if (email.isBlank() || password.isBlank()) {
-            statusText.text = c.invalidFields
-            return
-        }
-        statusText.text = "..."
-        auth!!.signInWithEmailAndPassword(email, password)
-            .addOnSuccessListener { result ->
-                val user = result.user
-                if (user == null) {
-                    statusText.text = c.invalidFields
-                } else {
-                    verifySignedInUser(user)
-                }
-            }
-            .addOnFailureListener { error -> statusText.text = error.localizedMessage ?: c.invalidFields }
+        if (email.isBlank() || password.isBlank()) { statusText.text = tr("ইমেইল ও পাসওয়ার্ড লিখুন।", "Enter email and password.", "أدخل البريد وكلمة المرور.", "ईमेल और पासवर्ड लिखें।"); return }
+        primaryButton.isEnabled = false
+        statusText.text = tr("লগইন হচ্ছে...", "Signing in...", "جارٍ تسجيل الدخول...", "लॉगिन हो रहा है...")
+        current.signInWithEmailAndPassword(email, password)
+            .addOnSuccessListener { result -> primaryButton.isEnabled = true; result.user?.let { refreshAndRoute(it) } }
+            .addOnFailureListener { error -> primaryButton.isEnabled = true; statusText.text = authError(error) }
     }
 
-    private fun verifySignedInUser(user: FirebaseUser) {
-        user.reload().addOnCompleteListener {
-            val refreshed = auth?.currentUser
-            if (it.isSuccessful && refreshed != null && refreshed.isEmailVerified) {
-                saveProfile(refreshed)
-            } else if (refreshed != null) {
-                renderVerification(refreshed)
-                statusText.text = copy().notVerified
-            } else {
-                renderLogin()
+    private fun createAccount() {
+        val current = firebaseReady() ?: return
+        val name = nameInput.text.toString().trim()
+        val email = emailInput.text.toString().trim()
+        val password = passwordInput.text.toString()
+        val confirm = confirmPasswordInput.text.toString()
+        if (name.isBlank() || email.isBlank() || password.isBlank() || confirm.isBlank()) { statusText.text = tr("সব তথ্য পূরণ করুন।", "Complete all fields.", "أكمل جميع الحقول.", "सभी जानकारी भरें।"); return }
+        if (password.length < 6) { statusText.text = tr("পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে।", "Password must be at least 6 characters.", "يجب أن تتكون كلمة المرور من 6 أحرف على الأقل.", "पासवर्ड कम से कम 6 अक्षर का होना चाहिए।"); return }
+        if (password != confirm) { statusText.text = tr("দুইটি পাসওয়ার্ড মিলছে না।", "Passwords do not match.", "كلمتا المرور غير متطابقتين.", "दोनों पासवर्ड मेल नहीं खाते।"); return }
+        primaryButton.isEnabled = false
+        current.createUserWithEmailAndPassword(email, password)
+            .addOnSuccessListener { result ->
+                val user = result.user
+                if (user == null) { primaryButton.isEnabled = true; statusText.text = "Account creation failed."; return@addOnSuccessListener }
+                user.updateProfile(com.google.firebase.auth.UserProfileChangeRequest.Builder().setDisplayName(name).build())
+                    .addOnCompleteListener {
+                        user.sendEmailVerification()
+                            .addOnSuccessListener { primaryButton.isEnabled = true; renderVerification(user) }
+                            .addOnFailureListener { error -> primaryButton.isEnabled = true; statusText.text = tr("অ্যাকাউন্ট হয়েছে, কিন্তু যাচাই ইমেইল পাঠানো যায়নি: ", "Account created, but verification email failed: ", "تم إنشاء الحساب لكن فشل إرسال رسالة التحقق: ", "खाता बन गया, लेकिन सत्यापन ईमेल नहीं भेजा गया: ") + (error.localizedMessage ?: "") }
+                    }
             }
-        }
+            .addOnFailureListener { error -> primaryButton.isEnabled = true; statusText.text = authError(error) }
     }
 
     private fun resendVerification() {
         val user = auth?.currentUser ?: return
+        statusText.text = tr("ইমেইল পাঠানো হচ্ছে...", "Sending email...", "جارٍ الإرسال...", "ईमेल भेजा जा रहा है...")
         user.sendEmailVerification()
-            .addOnSuccessListener { statusText.text = copy().verificationSent }
-            .addOnFailureListener { error -> statusText.text = error.localizedMessage ?: copy().notVerified }
+            .addOnSuccessListener { statusText.text = tr("যাচাই ইমেইল পাঠানো হয়েছে।", "Verification email sent.", "تم إرسال رسالة التحقق.", "सत्यापन ईमेल भेजा गया।") }
+            .addOnFailureListener { statusText.text = authError(it) }
     }
 
     private fun refreshVerification() {
         val user = auth?.currentUser ?: return
-        user.reload().addOnCompleteListener { task ->
+        statusText.text = tr("যাচাই অবস্থা দেখা হচ্ছে...", "Checking verification...", "جارٍ التحقق...", "सत्यापन जाँचा जा रहा है...")
+        user.reload().addOnSuccessListener {
             val refreshed = auth?.currentUser
-            if (task.isSuccessful && refreshed != null && refreshed.isEmailVerified) {
-                statusText.text = copy().verified
-                saveProfile(refreshed)
-            } else {
-                statusText.text = copy().notVerified
-            }
-        }
+            if (refreshed?.isEmailVerified == true) saveProfileAndOpen(refreshed)
+            else { statusText.text = tr("এখনো যাচাই হয়নি। ইমেইলের লিংক খুলে আবার Reload চাপুন।", "Not verified yet. Open the email link and reload again.", "لم يتم التحقق بعد. افتح الرابط ثم أعد التحميل.", "अभी सत्यापित नहीं हुआ। ईमेल लिंक खोलकर फिर Reload करें।"); refreshed?.let { renderVerification(it) } }
+        }.addOnFailureListener { statusText.text = authError(it) }
+    }
+
+    private fun refreshAndRoute(user: FirebaseUser) {
+        user.reload().addOnSuccessListener {
+            val refreshed = auth?.currentUser ?: user
+            if (refreshed.isEmailVerified) saveProfileAndOpen(refreshed) else renderVerification(refreshed)
+        }.addOnFailureListener { renderLogin(); Toast.makeText(this, authError(it), Toast.LENGTH_LONG).show() }
     }
 
     private fun resetPassword() {
+        val current = firebaseReady() ?: return
         val email = emailInput.text.toString().trim()
-        if (!firebaseReady()) return
-        if (email.isBlank()) {
-            statusText.text = copy().invalidFields
-            return
-        }
-        auth!!.sendPasswordResetEmail(email)
-            .addOnSuccessListener { statusText.text = copy().resetSent }
-            .addOnFailureListener { error -> statusText.text = error.localizedMessage ?: copy().invalidFields }
+        if (email.isBlank()) { statusText.text = tr("আগে ইমেইল লিখুন।", "Enter your email first.", "أدخل بريدك أولاً.", "पहले ईमेल लिखें।"); return }
+        current.sendPasswordResetEmail(email)
+            .addOnSuccessListener { statusText.text = tr("পাসওয়ার্ড রিসেট লিংক পাঠানো হয়েছে।", "Password reset link sent.", "تم إرسال رابط إعادة تعيين كلمة المرور.", "पासवर्ड रीसेट लिंक भेजा गया।") }
+            .addOnFailureListener { statusText.text = authError(it) }
     }
 
-    private fun saveProfile(user: FirebaseUser) {
-        val email = user.email ?: run {
-            renderVerification(user)
-            return
-        }
-        val data = hashMapOf<String, Any>(
+    private fun saveProfileAndOpen(user: FirebaseUser) {
+        val profile = hashMapOf<String, Any>(
             "uid" to user.uid,
-            "name" to (user.displayName ?: "SM CALL User"),
-            "email" to email,
+            "email" to (user.email ?: ""),
             "emailVerified" to true,
+            "name" to (user.displayName ?: ""),
             "updatedAt" to FieldValue.serverTimestamp()
         )
         FirebaseFirestore.getInstance().collection("users").document(user.uid)
-            .set(data)
+            .set(profile, SetOptions.merge())
             .addOnSuccessListener { renderHome(user) }
-            .addOnFailureListener { error ->
+            .addOnFailureListener {
                 renderHome(user)
-                Toast.makeText(this, copy().profileError + (error.localizedMessage ?: ""), Toast.LENGTH_LONG).show()
+                Toast.makeText(this, tr("লগইন হয়েছে, কিন্তু প্রোফাইল সেভ হয়নি: ", "Signed in, but profile save failed: ", "تم تسجيل الدخول لكن فشل حفظ الملف: ", "लॉगिन हुआ, लेकिन प्रोफ़ाइल सेव नहीं हुई: ") + (it.localizedMessage ?: ""), Toast.LENGTH_LONG).show()
             }
     }
 
-    private fun signOut() {
-        auth?.signOut()
-        renderLogin()
+    private fun authError(error: Throwable): String {
+        val code = (error as? FirebaseAuthException)?.errorCode.orEmpty()
+        return when (code) {
+            "ERROR_INVALID_EMAIL" -> tr("ইমেইল ঠিকানা সঠিক নয়।", "Invalid email address.", "البريد الإلكتروني غير صحيح.", "ईमेल पता अमान्य है।")
+            "ERROR_WRONG_PASSWORD", "ERROR_INVALID_CREDENTIAL" -> tr("ইমেইল বা পাসওয়ার্ড ভুল।", "Email or password is incorrect.", "البريد أو كلمة المرور غير صحيحة.", "ईमेल या पासवर्ड गलत है।")
+            "ERROR_USER_NOT_FOUND" -> tr("এই ইমেইলে অ্যাকাউন্ট নেই।", "No account found for this email.", "لا يوجد حساب لهذا البريد.", "इस ईमेल पर खाता नहीं मिला।")
+            "ERROR_EMAIL_ALREADY_IN_USE" -> tr("এই ইমেইলে আগে অ্যাকাউন্ট আছে।", "An account already uses this email.", "هذا البريد مستخدم بالفعل.", "इस ईमेल से पहले से खाता है।")
+            "ERROR_WEAK_PASSWORD" -> tr("আরও শক্ত পাসওয়ার্ড দিন।", "Choose a stronger password.", "اختر كلمة مرور أقوى.", "मज़बूत पासवर्ड चुनें।")
+            else -> error.localizedMessage ?: tr("কাজটি সম্পন্ন হয়নি।", "The operation failed.", "فشلت العملية.", "काम पूरा नहीं हुआ।")
+        }
     }
 
-    private fun showFeatureUnavailable() {
-        Toast.makeText(this, copy().featureUnavailable, Toast.LENGTH_LONG).show()
+    private fun changeLanguage() {
+        val index = languages.indexOf(language).coerceAtLeast(0)
+        language = languages[(index + 1) % languages.size]
+        val user = auth?.currentUser
+        when {
+            user != null && user.isEmailVerified -> renderHome(user)
+            user != null -> renderVerification(user)
+            else -> renderLogin()
+        }
     }
 }
