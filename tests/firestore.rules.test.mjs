@@ -66,8 +66,7 @@ test("an unverified account cannot access Firestore", async () => {
   const pending = unverifiedUserDb("pending");
   await assertFails(getDoc(doc(pending, "users", "someone")));
   await assertFails(setDoc(doc(pending, "users", "pending"), {
-    uid: "pending", name: "Pending", email: "pending@example.com",
-    emailVerified: false, updatedAt: serverTimestamp()
+    uid: "pending", name: "Pending", emailVerified: false, updatedAt: serverTimestamp()
   }));
 });
 
@@ -78,7 +77,6 @@ test("a signed-in user can create and read their own public profile", async () =
   await assertSucceeds(setDoc(profile, {
     uid: "alice",
     name: "Alice",
-    email: "alice@example.com",
     emailVerified: true,
     updatedAt: serverTimestamp()
   }));
@@ -93,7 +91,6 @@ test("another signed-in user can look up a public profile but cannot list profil
   await assertSucceeds(setDoc(doc(alice, "users", "alice"), {
     uid: "alice",
     name: "Alice",
-    email: "alice@example.com",
     emailVerified: true,
     updatedAt: serverTimestamp()
   }));
@@ -201,4 +198,87 @@ test("chat membership and existing message content cannot be edited", async () =
     createdAt: serverTimestamp()
   }));
   await assertFails(updateDoc(messageRef, { text: "Edited" }));
+});
+
+
+test("public profile documents cannot store email addresses", async () => {
+  const alice = userDb("alice");
+  await assertFails(setDoc(doc(alice, "users", "alice"), {
+    uid: "alice",
+    name: "Alice",
+    email: "alice@example.com",
+    emailVerified: true,
+    updatedAt: serverTimestamp()
+  }));
+});
+
+test("verified users can join a call room by its private room ID, up to five participants", async () => {
+  const alice = userDb("alice");
+  const bob = userDb("bob");
+  const roomRef = doc(alice, "callRooms", "private-room-id");
+
+  await assertSucceeds(setDoc(roomRef, {
+    hostUid: "alice",
+    members: ["alice"],
+    callType: "audio",
+    status: "ringing",
+    maxParticipants: 5,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp()
+  }));
+
+  // The room ID is the invitation; room collections cannot be listed.
+  await assertSucceeds(getDoc(doc(bob, "callRooms", "private-room-id")));
+  await assertFails(getDocs(collection(bob, "callRooms")));
+
+  await assertSucceeds(updateDoc(doc(bob, "callRooms", "private-room-id"), {
+    members: ["alice", "bob"],
+    status: "active",
+    updatedAt: serverTimestamp()
+  }));
+});
+
+test("a sixth participant cannot join a full call room", async () => {
+  const alice = userDb("alice");
+  const mallory = userDb("mallory");
+  const members = ["alice", "bob", "carol", "dave", "erin"];
+  await assertSucceeds(setDoc(doc(alice, "callRooms", "full-room"), {
+    hostUid: "alice",
+    members,
+    callType: "video",
+    status: "active",
+    maxParticipants: 5,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp()
+  }));
+  await assertFails(updateDoc(doc(mallory, "callRooms", "full-room"), {
+    members: [...members, "mallory"],
+    status: "active",
+    updatedAt: serverTimestamp()
+  }));
+});
+
+test("the last call-room participant can end the room but cannot alter host or call type", async () => {
+  const alice = userDb("alice");
+  const roomRef = doc(alice, "callRooms", "end-room");
+  await assertSucceeds(setDoc(roomRef, {
+    hostUid: "alice",
+    members: ["alice"],
+    callType: "video",
+    status: "ringing",
+    maxParticipants: 5,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp()
+  }));
+
+  await assertSucceeds(updateDoc(roomRef, {
+    members: [],
+    status: "ended",
+    endedAt: serverTimestamp(),
+    updatedAt: serverTimestamp()
+  }));
+  await assertFails(updateDoc(roomRef, {
+    hostUid: "mallory",
+    updatedAt: serverTimestamp()
+  }));
 });
