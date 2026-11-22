@@ -19,7 +19,7 @@ inlineScripts.forEach(([, , source], index) => {
 const requiredScreens = [
   "loginScreen",
   "signupScreen",
-  "otpScreen",
+  "verificationScreen",
   "homeScreen",
   "chatsScreen",
   "groupScreen",
@@ -42,10 +42,15 @@ assert.match(html, /otherMembers\.length\s*\+\s*1\s*>\s*20/, "Client must enforc
 assert.match(rules, /request\.resource\.data\.members\.size\(\)\s*<=\s*20/, "Firestore rules must enforce the 20-member group limit");
 assert.equal(firebaseConfig.firestore?.rules, "firestore.rules", "firebase.json must point to firestore.rules");
 
-assert.match(html, /function onlineDemoLogin\s*\(/, "Online demo sign-in flow is missing");
-assert.match(html, /signInAnonymously\s*\(/, "Online demo should use anonymous Firebase sign-in");
-assert.match(html, /function demoLogin\s*\(/, "Local-only demo sign-in flow is missing");
-assert.match(html, /লোকাল ডেমো শুধু এই ফোনে/, "Local demo must clearly explain its device-only limitation");
+assert.match(html, /function createEmailAccount\s*\(/, "Email registration flow is missing");
+assert.match(html, /function loginWithEmail\s*\(/, "Email/password login flow is missing");
+assert.match(html, /sendEmailVerification\s*\(/, "Email verification flow is missing");
+assert.match(html, /emailVerified/, "Verified-email access gate is missing");
+assert.match(html, /function resendVerificationEmail\s*\(/, "Resend verification flow is missing");
+assert.match(html, /function resetPassword\s*\(/, "Password reset flow is missing");
+assert.doesNotMatch(html, /signInWithPhoneNumber|sendOTP|verifyOTP|RecaptchaVerifier|signInAnonymously/, "Phone OTP and anonymous login must be removed");
+assert.match(html, /MAX_GROUP_CALL_PARTICIPANTS\s*=\s*5/, "Group audio/video call limit must be five");
+assert.match(rules, /request\.auth\.token\.email_verified\s*==\s*true/, "Firestore rules must require verified email");
 
 assert.match(html, /function coming\s*\(feature\)/, "Call placeholder handler is missing");
 assert.match(html, /এখনো চালু হয়নি/, "Call UI must not imply real calling is implemented");
@@ -56,4 +61,5 @@ console.log("- Required login, chat, group and profile screens");
 console.log("- bn/en/ar/hi language options and dictionaries");
 console.log("- 20-member group limit in UI and Firestore rules");
 console.log("- Firebase rules configuration path");
-console.log("- Demo modes and honest call-feature placeholder");
+console.log("- Email/password authentication, verification, resend and password reset");
+console.log("- Five-person group-call limit and honest call-feature placeholder");
