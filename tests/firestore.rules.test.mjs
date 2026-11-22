@@ -239,19 +239,33 @@ test("verified users can join a call room by its private room ID, up to five par
 });
 
 test("a sixth participant cannot join a full call room", async () => {
-  const alice = userDb("alice");
-  const mallory = userDb("mallory");
+  const roomId = "full-room";
   const members = ["alice", "bob", "carol", "dave", "erin"];
-  await assertSucceeds(setDoc(doc(alice, "callRooms", "full-room"), {
+  const alice = userDb("alice");
+  const roomRef = doc(alice, "callRooms", roomId);
+
+  // The host creates the room alone, then each verified invitee joins in turn.
+  await assertSucceeds(setDoc(roomRef, {
     hostUid: "alice",
-    members,
+    members: ["alice"],
     callType: "video",
-    status: "active",
+    status: "ringing",
     maxParticipants: 5,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp()
   }));
-  await assertFails(updateDoc(doc(mallory, "callRooms", "full-room"), {
+
+  for (const uid of members.slice(1)) {
+    const db = userDb(uid);
+    await assertSucceeds(updateDoc(doc(db, "callRooms", roomId), {
+      members: members.slice(0, members.indexOf(uid) + 1),
+      status: "active",
+      updatedAt: serverTimestamp()
+    }));
+  }
+
+  const mallory = userDb("mallory");
+  await assertFails(updateDoc(doc(mallory, "callRooms", roomId), {
     members: [...members, "mallory"],
     status: "active",
     updatedAt: serverTimestamp()
