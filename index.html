@@ -417,7 +417,7 @@ p {
   <div class="card profile">
     <div class="avatar">SM</div>
     <h2 id="profileName">ব্যবহারকারী</h2>
-    <p id="profilePhone"></p>
+    <p id="profileEmail"></p>
     <p id="profileUID" class="status"></p>
   </div>
 
@@ -473,6 +473,10 @@ let language = "bn";
 
 // SCREEN CONTROL
 function showScreen(screenId) {
+  const allowedScreens = ["loginScreen", "signupScreen", "verificationScreen"];
+  if (currentUser && !demoMode && !currentUser.emailVerified && !allowedScreens.includes(screenId)) {
+    screenId = "verificationScreen";
+  }
   document.querySelectorAll(".screen").forEach(screen => {
     screen.classList.remove("active");
   });
@@ -627,9 +631,7 @@ async function openProfile() {
   nameEl.textContent = demoMode
     ? (demoProfileName || "SM CALL Demo")
     : "লোড হচ্ছে...";
-  phoneEl.textContent = demoMode
-    ? "ডেমো অ্যাকাউন্ট — ফোন নম্বর যাচাই হয়নি"
-    : (currentUser.phoneNumber || "ফোন নম্বর যুক্ত নেই");
+  emailEl.textContent = demoMode ? "লোকাল ডেমো অ্যাকাউন্ট" : (currentUser.email || "");
   uidEl.textContent = (demoMode ? "Demo ID: " : "User ID: ") + currentUser.uid;
 
   showScreen("profileScreen");
@@ -641,7 +643,7 @@ async function openProfile() {
       nameEl.textContent = data.name || "SM CALL User";
     } catch (error) {
       nameEl.textContent = "নাম লোড হয়নি";
-      phoneEl.textContent = "প্রোফাইল লোড সমস্যা: " + error.message;
+      emailEl.textContent = "প্রোফাইল লোড সমস্যা: " + error.message;
     }
   }
 }
@@ -667,13 +669,8 @@ async function showHome() {
     return;
   }
 
-  const [doc, privateDoc] = await Promise.all([
-    db.collection("users").doc(currentUser.uid).get(),
-    db.collection("privateUsers").doc(currentUser.uid).get()
-  ]);
-
+  const doc = await db.collection("users").doc(currentUser.uid).get();
   const data = doc.exists ? doc.data() : {};
-  const privateData = privateDoc.exists ? privateDoc.data() : {};
 
   document.getElementById("userGreeting").textContent =
     "স্বাগতম, " + (data.name || "বন্ধু");
