@@ -3,8 +3,10 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // Only authenticated and email-verified accounts may access app data.
     function signedIn() {
-      return request.auth != null;
+      return request.auth != null
+        && request.auth.token.email_verified == true;
     }
 
     function chatExists(chatId) {
@@ -26,9 +28,11 @@ service cloud.firestore {
       allow create, update: if signedIn()
         && request.auth.uid == userId
         && request.resource.data.keys().hasOnly([
-          'uid', 'name', 'updatedAt'
+          'uid', 'name', 'email', 'emailVerified', 'updatedAt'
         ])
         && request.resource.data.uid == userId
+        && request.resource.data.email is string
+        && request.resource.data.emailVerified == true
         && request.resource.data.name is string
         && request.resource.data.name.size() > 0
         && request.resource.data.name.size() <= 60
