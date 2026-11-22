@@ -6,8 +6,8 @@ import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
-import android.os.CountDownTimer
 import android.text.InputType
+import android.util.Patterns
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
@@ -21,46 +21,40 @@ import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthException
 import com.google.firebase.auth.FirebaseUser
-import com.google.firebase.auth.PhoneAuthCredential
-import com.google.firebase.auth.PhoneAuthOptions
-import com.google.firebase.auth.PhoneAuthProvider
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
-import java.util.concurrent.TimeUnit
 
 class MainActivity : Activity() {
     private var auth: FirebaseAuth? = null
     private var language = "bn"
-    private var verificationId: String? = null
-    private var verificationPhoneNumber: String? = null
-    private var resendToken: PhoneAuthProvider.ForceResendingToken? = null
-    private var resendTimer: CountDownTimer? = null
-    private var resendAvailableAtMillis = 0L
-    private var otpRequestInProgress = false
 
-    private lateinit var phoneInput: EditText
-    private lateinit var otpInput: EditText
-    private lateinit var sendOtpButton: Button
-    private lateinit var verifyButton: Button
+    private lateinit var emailInput: EditText
+    private lateinit var passwordInput: EditText
     private lateinit var statusText: TextView
+    private lateinit var loginButton: Button
+    private lateinit var createAccountButton: Button
+    private lateinit var resetPasswordButton: Button
 
     private val languages = listOf("bn", "en", "ar", "hi")
 
     private data class Labels(
         val welcome: String,
         val intro: String,
-        val phoneHint: String,
-        val sendOtp: String,
-        val otpHint: String,
-        val verifyOtp: String,
-        val otpSent: String,
-        val verifying: String,
+        val emailHint: String,
+        val passwordHint: String,
+        val login: String,
+        val createAccount: String,
+        val resetPassword: String,
+        val enterEmail: String,
+        val invalidEmail: String,
+        val enterPassword: String,
+        val passwordTooShort: String,
         val firebaseMissing: String,
-        val invalidPhone: String,
-        val phoneChanged: String,
-        val invalidOtp: String,
-        val otpFailed: String,
+        val working: String,
+        val loginFailed: String,
+        val accountCreated: String,
+        val resetSent: String,
         val homeTitle: String,
         val signedInAs: String,
         val chats: String,
@@ -75,10 +69,6 @@ class MainActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         language = savedInstanceState?.getString(STATE_LANGUAGE) ?: language
-        verificationId = savedInstanceState?.getString(STATE_VERIFICATION_ID)
-        verificationPhoneNumber = savedInstanceState?.getString(STATE_VERIFICATION_PHONE)
-        resendAvailableAtMillis =
-            savedInstanceState?.getLong(STATE_RESEND_AVAILABLE_AT) ?: 0L
 
         window.statusBarColor = Color.rgb(7, 27, 54)
         window.navigationBarColor = Color.rgb(7, 27, 54)
@@ -94,125 +84,73 @@ class MainActivity : Activity() {
             renderHome(signedInUser)
         } else {
             renderLogin()
-            savedInstanceState?.let { state ->
-                phoneInput.setText(state.getString(STATE_PHONE).orEmpty())
-            }
-            restorePendingOtpUi()
+            emailInput.setText(savedInstanceState?.getString(STATE_EMAIL).orEmpty())
         }
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         outState.putString(STATE_LANGUAGE, language)
-        outState.putString(STATE_VERIFICATION_ID, verificationId)
-        outState.putString(STATE_VERIFICATION_PHONE, verificationPhoneNumber)
-        outState.putLong(STATE_RESEND_AVAILABLE_AT, resendAvailableAtMillis)
-        if (::phoneInput.isInitialized) {
-            outState.putString(STATE_PHONE, phoneInput.text.toString())
+        if (::emailInput.isInitialized) {
+            outState.putString(STATE_EMAIL, emailInput.text.toString())
         }
-    }
-
-    override fun onDestroy() {
-        resendTimer?.cancel()
-        resendTimer = null
-        super.onDestroy()
     }
 
     private fun labels(): Labels = when (language) {
         "en" -> Labels(
-            "Welcome to SM CALL",
-            "Sign in with your phone number",
-            "Phone number with country code, e.g. +8801...",
-            "Send SMS code",
-            "6-digit verification code",
-            "Verify and sign in",
-            "Code sent. Check your phone.",
-            "Verifying your number...",
-            "Firebase is not connected yet. Add google-services.json to android/app.",
-            "Enter a valid international number, e.g. +8801XXXXXXXXX.",
-            "The phone number changed. Send a new code for this number.",
-            "Enter the 6-digit code.",
-            "Could not verify: ",
-            "SM CALL Home",
-            "Signed in as",
-            "Chats",
-            "Audio call",
-            "Video call",
-            "Group video (up to 20)",
-            "Sign out",
-            "This feature is not active yet. It will be added and tested in a later step.",
+            "Welcome to SM CALL", "Sign in or create an account with email",
+            "Email address", "Password (at least 6 characters)",
+            "Log in", "Create account", "Forgot password?",
+            "Enter your email address.", "Enter a valid email address.",
+            "Enter your password.", "Password must be at least 6 characters.",
+            "Firebase is not connected. Check android/app/google-services.json.",
+            "Please wait...", "Authentication failed: ", "Account created successfully.",
+            "Password reset email sent. Check your inbox.",
+            "SM CALL Home", "Signed in as", "Chats", "Audio call", "Video call",
+            "Group video (up to 20)", "Sign out",
+            "This feature is not active yet. It will be added and tested later.",
             "Profile saved."
         )
         "ar" -> Labels(
-            "مرحباً بك في SM CALL",
-            "سجّل الدخول باستخدام رقم هاتفك",
-            "رقم الهاتف مع رمز الدولة، مثل +8801...",
-            "إرسال رمز SMS",
-            "رمز التحقق المكوّن من 6 أرقام",
-            "تحقق وسجّل الدخول",
-            "تم إرسال الرمز. تحقق من هاتفك.",
-            "جارٍ التحقق من رقمك...",
-            "Firebase غير متصل بعد. أضف google-services.json إلى android/app.",
-            "أدخل رقمًا دوليًا صحيحًا، مثل +8801XXXXXXXXX.",
-            "تم تغيير رقم الهاتف. أرسل رمزًا جديدًا لهذا الرقم.",
-            "أدخل الرمز المكوّن من 6 أرقام.",
-            "تعذر التحقق: ",
-            "الصفحة الرئيسية لـ SM CALL",
-            "تم تسجيل الدخول باسم",
-            "المحادثات",
-            "مكالمة صوتية",
-            "مكالمة فيديو",
-            "فيديو جماعي (حتى 20)",
-            "تسجيل الخروج",
-            "هذه الميزة غير مفعّلة بعد. ستتم إضافتها واختبارها في خطوة لاحقة.",
+            "مرحباً بك في SM CALL", "سجّل الدخول أو أنشئ حساباً بالبريد الإلكتروني",
+            "البريد الإلكتروني", "كلمة المرور (6 أحرف على الأقل)",
+            "تسجيل الدخول", "إنشاء حساب", "هل نسيت كلمة المرور؟",
+            "أدخل بريدك الإلكتروني.", "أدخل عنوان بريد إلكتروني صحيحاً.",
+            "أدخل كلمة المرور.", "يجب أن تتكون كلمة المرور من 6 أحرف على الأقل.",
+            "Firebase غير متصل. تحقق من ملف google-services.json.",
+            "يرجى الانتظار...", "فشلت المصادقة: ", "تم إنشاء الحساب بنجاح.",
+            "تم إرسال رسالة إعادة تعيين كلمة المرور. تحقق من بريدك.",
+            "الصفحة الرئيسية لـ SM CALL", "تم تسجيل الدخول باسم", "المحادثات",
+            "مكالمة صوتية", "مكالمة فيديو", "فيديو جماعي (حتى 20)", "تسجيل الخروج",
+            "هذه الميزة غير مفعّلة بعد. ستتم إضافتها واختبارها لاحقاً.",
             "تم حفظ الملف الشخصي."
         )
         "hi" -> Labels(
-            "SM CALL में आपका स्वागत है",
-            "अपने फ़ोन नंबर से लॉगिन करें",
-            "देश कोड सहित फ़ोन नंबर, जैसे +8801...",
-            "SMS कोड भेजें",
-            "6 अंकों का सत्यापन कोड",
-            "सत्यापित करें और लॉगिन करें",
-            "कोड भेज दिया गया है। अपना फ़ोन देखें।",
-            "आपका नंबर सत्यापित हो रहा है...",
-            "Firebase अभी कनेक्ट नहीं है। android/app में google-services.json जोड़ें।",
-            "सही अंतरराष्ट्रीय नंबर लिखें, जैसे +8801XXXXXXXXX।",
-            "फ़ोन नंबर बदल गया है। इस नंबर के लिए नया कोड भेजें।",
-            "6 अंकों का कोड लिखें।",
-            "सत्यापन नहीं हुआ: ",
-            "SM CALL होम",
-            "लॉगिन किया गया",
-            "चैट",
-            "ऑडियो कॉल",
-            "वीडियो कॉल",
-            "ग्रुप वीडियो (अधिकतम 20)",
-            "लॉगआउट",
-            "यह सुविधा अभी चालू नहीं है। इसे बाद के चरण में जोड़ा और जाँचा जाएगा।",
+            "SM CALL में आपका स्वागत है", "ईमेल से लॉगिन करें या नया खाता बनाएँ",
+            "ईमेल पता", "पासवर्ड (कम से कम 6 अक्षर)",
+            "लॉगिन", "खाता बनाएँ", "पासवर्ड भूल गए?",
+            "अपना ईमेल पता लिखें।", "सही ईमेल पता लिखें।",
+            "पासवर्ड लिखें।", "पासवर्ड कम से कम 6 अक्षरों का होना चाहिए।",
+            "Firebase कनेक्ट नहीं है। google-services.json जाँचें।",
+            "कृपया प्रतीक्षा करें...", "लॉगिन विफल: ", "खाता सफलतापूर्वक बन गया।",
+            "पासवर्ड रीसेट ईमेल भेज दिया गया है। इनबॉक्स देखें।",
+            "SM CALL होम", "लॉगिन किया गया", "चैट", "ऑडियो कॉल", "वीडियो कॉल",
+            "ग्रुप वीडियो (अधिकतम 20)", "लॉगआउट",
+            "यह सुविधा अभी चालू नहीं है। इसे बाद में जोड़ा और जाँचा जाएगा।",
             "प्रोफ़ाइल सेव हो गई।"
         )
         else -> Labels(
-            "স্বাগতম SM CALL-এ",
-            "আপনার ফোন নম্বর দিয়ে লগইন করুন",
-            "দেশের কোডসহ ফোন নম্বর লিখুন, যেমন +8801...",
-            "SMS OTP পাঠান",
-            "৬ সংখ্যার OTP লিখুন",
-            "যাচাই করে লগইন করুন",
-            "OTP পাঠানো হয়েছে। ফোন দেখুন।",
-            "আপনার নম্বর যাচাই হচ্ছে...",
-            "Firebase এখনো সংযুক্ত হয়নি। android/app ফোল্ডারে google-services.json যোগ করতে হবে।",
-            "সঠিক আন্তর্জাতিক নম্বর লিখুন, যেমন +8801XXXXXXXXX।",
-            "ফোন নম্বর পরিবর্তন হয়েছে। এই নম্বরে নতুন OTP পাঠান।",
-            "৬ সংখ্যার OTP লিখুন।",
-            "যাচাই করা যায়নি: ",
-            "SM CALL হোম",
-            "লগইন করেছেন",
-            "চ্যাট",
-            "অডিও কল",
-            "ভিডিও কল",
-            "গ্রুপ ভিডিও (সর্বোচ্চ ২০ জন)",
-            "লগআউট",
-            "এই সুবিধাটি এখনো চালু হয়নি। পরের ধাপে তৈরি ও পরীক্ষা করা হবে।",
+            "স্বাগতম SM CALL-এ", "ইমেইল দিয়ে লগইন করুন অথবা নতুন অ্যাকাউন্ট খুলুন",
+            "আপনার ইমেইল ঠিকানা", "পাসওয়ার্ড (কমপক্ষে ৬ অক্ষর)",
+            "লগইন করুন", "নতুন অ্যাকাউন্ট তৈরি করুন", "পাসওয়ার্ড ভুলে গেছেন?",
+            "আপনার ইমেইল লিখুন।", "সঠিক ইমেইল ঠিকানা লিখুন।",
+            "আপনার পাসওয়ার্ড লিখুন।", "পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে।",
+            "Firebase সংযুক্ত নেই। android/app/google-services.json পরীক্ষা করুন।",
+            "অপেক্ষা করুন...", "লগইন করা যায়নি: ", "অ্যাকাউন্ট তৈরি হয়েছে।",
+            "পাসওয়ার্ড রিসেটের ইমেইল পাঠানো হয়েছে। ইনবক্স দেখুন।",
+            "SM CALL হোম", "লগইন করেছেন", "চ্যাট", "অডিও কল", "ভিডিও কল",
+            "গ্রুপ ভিডিও (সর্বোচ্চ ২০ জন)", "লগআউট",
+            "এই সুবিধাটি এখনো চালু হয়নি। পরে তৈরি ও পরীক্ষা করা হবে।",
             "প্রোফাইল সংরক্ষণ হয়েছে।"
         )
     }
@@ -233,19 +171,13 @@ class MainActivity : Activity() {
                 GradientDrawable.Orientation.TL_BR,
                 intArrayOf(Color.rgb(7, 27, 54), Color.rgb(18, 63, 112))
             )
-            layoutDirection = if (language == "ar") {
-                View.LAYOUT_DIRECTION_RTL
-            } else {
-                View.LAYOUT_DIRECTION_LTR
-            }
+            layoutDirection = if (language == "ar") View.LAYOUT_DIRECTION_RTL
+                else View.LAYOUT_DIRECTION_LTR
         }
-        scroll.addView(
-            page,
-            ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            )
-        )
+        scroll.addView(page, ViewGroup.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        ))
         setContentView(scroll)
         return page
     }
@@ -261,10 +193,9 @@ class MainActivity : Activity() {
             setTextColor(Color.WHITE)
             typeface = Typeface.DEFAULT_BOLD
         }
-        row.addView(
-            brand,
-            LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
-        )
+        row.addView(brand, LinearLayout.LayoutParams(
+            0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f
+        ))
         val languageButton = Button(this).apply {
             text = when (language) {
                 "en" -> "English"
@@ -289,17 +220,11 @@ class MainActivity : Activity() {
         }
 
     private fun addSpace(page: LinearLayout, heightDp: Int) {
-        page.addView(
-            View(this),
-            LinearLayout.LayoutParams(1, dp(heightDp))
-        )
+        page.addView(View(this), LinearLayout.LayoutParams(1, dp(heightDp)))
     }
 
     private fun addText(
-        page: LinearLayout,
-        text: String,
-        size: Float,
-        bold: Boolean = false
+        page: LinearLayout, text: String, size: Float, bold: Boolean = false
     ): TextView {
         val view = TextView(this).apply {
             this.text = text
@@ -308,13 +233,10 @@ class MainActivity : Activity() {
             if (bold) typeface = Typeface.DEFAULT_BOLD
             gravity = if (language == "ar") Gravity.RIGHT else Gravity.LEFT
         }
-        page.addView(
-            view,
-            LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            )
-        )
+        page.addView(view, LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        ))
         return view
     }
 
@@ -335,9 +257,7 @@ class MainActivity : Activity() {
         }
 
     private fun addButton(
-        page: LinearLayout,
-        text: String,
-        onClick: () -> Unit,
+        page: LinearLayout, text: String, onClick: () -> Unit,
         secondary: Boolean = false
     ): Button {
         val button = Button(this).apply {
@@ -352,8 +272,7 @@ class MainActivity : Activity() {
             setOnClickListener { onClick() }
         }
         val params = LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            dp(54)
+            ViewGroup.LayoutParams.MATCH_PARENT, dp(54)
         )
         params.topMargin = dp(12)
         page.addView(button, params)
@@ -369,43 +288,39 @@ class MainActivity : Activity() {
         addText(page, copy.intro, 16f)
         addSpace(page, 24)
 
-        phoneInput = addInput(copy.phoneHint, InputType.TYPE_CLASS_PHONE)
-        page.addView(
-            phoneInput,
-            LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                dp(54)
-            )
+        emailInput = addInput(
+            copy.emailHint,
+            InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS
         )
+        page.addView(emailInput, LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, dp(54)
+        ))
 
-        otpInput = addInput(copy.otpHint, InputType.TYPE_CLASS_NUMBER)
-        otpInput.textDirection = View.TEXT_DIRECTION_LTR
-        otpInput.visibility = View.GONE
-        val otpParams = LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            dp(54)
+        passwordInput = addInput(
+            copy.passwordHint,
+            InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
         )
-        otpParams.topMargin = dp(14)
-        page.addView(otpInput, otpParams)
+        val passwordParams = LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, dp(54)
+        ).apply { topMargin = dp(14) }
+        page.addView(passwordInput, passwordParams)
 
         statusText = addText(page, "", 14f)
         addSpace(page, 6)
-
-        sendOtpButton = addButton(page, copy.sendOtp, { sendOtp() })
-        verifyButton = addButton(page, copy.verifyOtp, { verifyOtp() }, true)
-        verifyButton.visibility = View.GONE
-
-        addSpace(page, 22)
-        addText(
-            page,
-            "Android app foundation • Firebase phone authentication",
-            12f
+        loginButton = addButton(page, copy.login, { authenticate(createAccount = false) })
+        createAccountButton = addButton(
+            page, copy.createAccount, { authenticate(createAccount = true) }, true
         )
+        resetPasswordButton = addButton(
+            page, copy.resetPassword, { sendPasswordReset() }, true
+        )
+        addSpace(page, 22)
+        addText(page, "Email and password • Firebase Authentication", 12f)
     }
 
     private fun changeLanguage() {
-        val currentPhone = if (::phoneInput.isInitialized) phoneInput.text.toString() else ""
-        val currentOtp = if (::otpInput.isInitialized) otpInput.text.toString() else ""
+        val currentEmail = if (::emailInput.isInitialized) emailInput.text.toString() else ""
+        val currentPassword = if (::passwordInput.isInitialized) passwordInput.text.toString() else ""
         val currentIndex = languages.indexOf(language).coerceAtLeast(0)
         language = languages[(currentIndex + 1) % languages.size]
         val signedInUser = auth?.currentUser
@@ -413,85 +328,37 @@ class MainActivity : Activity() {
             renderHome(signedInUser)
         } else {
             renderLogin()
-            phoneInput.setText(currentPhone)
-            otpInput.setText(currentOtp)
-            restorePendingOtpUi()
+            emailInput.setText(currentEmail)
+            passwordInput.setText(currentPassword)
         }
     }
 
-    private fun resendReadyText(): String = when (language) {
-        "en" -> "Resend SMS code"
-        "ar" -> "إعادة إرسال رمز SMS"
-        "hi" -> "SMS कोड फिर भेजें"
-        else -> "আবার SMS OTP পাঠান"
+    private fun setAuthButtonsEnabled(enabled: Boolean) {
+        loginButton.isEnabled = enabled
+        createAccountButton.isEnabled = enabled
+        resetPasswordButton.isEnabled = enabled
     }
 
-    private fun resendCountdownText(seconds: Long): String = when (language) {
-        "en" -> "Resend in ${seconds}s"
-        "ar" -> "${seconds} ث لإعادة الإرسال"
-        "hi" -> "${seconds} सेकंड में फिर भेजें"
-        else -> "${seconds} সেকেন্ড পরে আবার পাঠান"
-    }
-
-    private fun clearPendingVerification() {
-        verificationId = null
-        verificationPhoneNumber = null
-        resendToken = null
-        resendTimer?.cancel()
-        resendTimer = null
-        resendAvailableAtMillis = 0L
-    }
-
-    private fun startResendCooldown(durationMillis: Long = 30_000L) {
-        resendTimer?.cancel()
-        if (durationMillis <= 0L) {
-            resendAvailableAtMillis = 0L
-            sendOtpButton.isEnabled = true
-            sendOtpButton.text = resendReadyText()
-            resendTimer = null
-            return
-        }
-
-        resendAvailableAtMillis = System.currentTimeMillis() + durationMillis
-        sendOtpButton.isEnabled = false
-        resendTimer = object : CountDownTimer(durationMillis, 1_000L) {
-            override fun onTick(millisUntilFinished: Long) {
-                sendOtpButton.text =
-                    resendCountdownText((millisUntilFinished + 999L) / 1_000L)
-            }
-
-            override fun onFinish() {
-                resendTimer = null
-                resendAvailableAtMillis = 0L
-                sendOtpButton.isEnabled = true
-                sendOtpButton.text = resendReadyText()
-            }
-        }.start()
-    }
-
-    private fun restorePendingOtpUi() {
-        if (verificationId == null) return
-        otpInput.visibility = View.VISIBLE
-        verifyButton.visibility = View.VISIBLE
-        sendOtpButton.text = resendReadyText()
-        val remaining = resendAvailableAtMillis - System.currentTimeMillis()
-        if (remaining > 0L) {
-            startResendCooldown(remaining)
-        } else {
-            resendAvailableAtMillis = 0L
-            sendOtpButton.isEnabled = true
-        }
-    }
-
-    private fun sendOtp() {
+    private fun authenticate(createAccount: Boolean) {
         val copy = labels()
-        val phone = PhoneAuthInputValidator.normalizePhoneNumber(phoneInput.text.toString())
-        if (!PhoneAuthInputValidator.isValidPhoneNumber(phone)) {
-            statusText.text = copy.invalidPhone
+        val email = emailInput.text.toString().trim()
+        val password = passwordInput.text.toString()
+
+        if (email.isBlank()) {
+            statusText.text = copy.enterEmail
             return
         }
-        if (phoneInput.text.toString() != phone) {
-            phoneInput.setText(phone)
+        if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            statusText.text = copy.invalidEmail
+            return
+        }
+        if (password.isBlank()) {
+            statusText.text = copy.enterPassword
+            return
+        }
+        if (createAccount && password.length < 6) {
+            statusText.text = copy.passwordTooShort
+            return
         }
 
         val currentAuth = auth
@@ -500,147 +367,96 @@ class MainActivity : Activity() {
             return
         }
 
-        if (verificationPhoneNumber != null &&
-            !PhoneAuthInputValidator.matchesVerificationPhone(phone, verificationPhoneNumber)
-        ) {
-            clearPendingVerification()
-            otpInput.text.clear()
-            otpInput.visibility = View.GONE
-            verifyButton.visibility = View.GONE
-            sendOtpButton.text = copy.sendOtp
-            sendOtpButton.isEnabled = true
+        setAuthButtonsEnabled(false)
+        statusText.text = copy.working
+        val task = if (createAccount) {
+            currentAuth.createUserWithEmailAndPassword(email, password)
+        } else {
+            currentAuth.signInWithEmailAndPassword(email, password)
         }
-        verificationPhoneNumber = phone
-
-        if (otpRequestInProgress) return
-        if (resendAvailableAtMillis > System.currentTimeMillis()) return
-
-        otpRequestInProgress = true
-        sendOtpButton.isEnabled = false
-        statusText.text = copy.verifying
-        val callbacks = object : PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
-            override fun onVerificationCompleted(credential: PhoneAuthCredential) {
-                runOnUiThread {
-                    otpRequestInProgress = false
-                    if (!PhoneAuthInputValidator.matchesVerificationPhone(
-                            phoneInput.text.toString(),
-                            phone
-                        )
-                    ) {
-                        statusText.text = copy.phoneChanged
-                        return@runOnUiThread
-                    }
-                    resendTimer?.cancel()
-                    resendTimer = null
-                    resendAvailableAtMillis = 0L
-                    sendOtpButton.isEnabled = false
-                    statusText.text = copy.verifying
-                    signInWithCredential(credential)
-                }
+        task.addOnSuccessListener { result ->
+            val user = result.user
+            if (user != null) {
+                saveProfile(user, copy.accountCreated)
+            } else {
+                setAuthButtonsEnabled(true)
+                statusText.text = copy.loginFailed
             }
-
-            override fun onVerificationFailed(error: com.google.firebase.FirebaseException) {
-                runOnUiThread {
-                    otpRequestInProgress = false
-                    sendOtpButton.isEnabled = true
-                    statusText.text = localizedAuthError(error)
-                }
-            }
-
-            override fun onCodeSent(
-                id: String,
-                token: PhoneAuthProvider.ForceResendingToken
-            ) {
-                super.onCodeSent(id, token)
-                verificationId = id
-                verificationPhoneNumber = phone
-                resendToken = token
-                runOnUiThread {
-                    otpRequestInProgress = false
-                    otpInput.visibility = View.VISIBLE
-                    verifyButton.visibility = View.VISIBLE
-                    sendOtpButton.text = resendReadyText()
-                    startResendCooldown()
-                    statusText.text = copy.otpSent
-                }
-            }
-
-            override fun onCodeAutoRetrievalTimeOut(id: String) {
-                verificationId = id
-                runOnUiThread {
-                    statusText.text = copy.otpSent
-                }
-            }
+        }.addOnFailureListener { error ->
+            setAuthButtonsEnabled(true)
+            statusText.text = localizedAuthError(error)
         }
-
-        val optionsBuilder = PhoneAuthOptions.newBuilder(currentAuth)
-            .setPhoneNumber(phone)
-            .setTimeout(60L, TimeUnit.SECONDS)
-            .setActivity(this)
-            .setCallbacks(callbacks)
-        resendToken?.let { optionsBuilder.setForceResendingToken(it) }
-
-        PhoneAuthProvider.verifyPhoneNumber(optionsBuilder.build())
     }
 
-    private fun verifyOtp() {
+    private fun sendPasswordReset() {
         val copy = labels()
-        val code = PhoneAuthInputValidator.normalizeOtp(otpInput.text.toString())
-        val id = verificationId
-        if (id == null) {
-            statusText.text = copy.otpSent
+        val email = emailInput.text.toString().trim()
+        if (email.isBlank()) {
+            statusText.text = copy.enterEmail
             return
         }
-        if (!PhoneAuthInputValidator.matchesVerificationPhone(
-                phoneInput.text.toString(),
-                verificationPhoneNumber
-            )
-        ) {
-            statusText.text = copy.phoneChanged
+        if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            statusText.text = copy.invalidEmail
             return
         }
-        if (!PhoneAuthInputValidator.isValidOtp(code)) {
-            statusText.text = copy.invalidOtp
+        val currentAuth = auth
+        if (currentAuth == null) {
+            statusText.text = copy.firebaseMissing
             return
         }
-        if (otpInput.text.toString() != code) {
-            otpInput.setText(code)
-        }
-        statusText.text = copy.verifying
-        signInWithCredential(PhoneAuthProvider.getCredential(id, code))
-    }
-
-    private fun signInWithCredential(credential: PhoneAuthCredential) {
-        val currentAuth = auth ?: return
-        currentAuth.signInWithCredential(credential)
-            .addOnSuccessListener { result ->
-                clearPendingVerification()
-                val user = result.user
-                if (user != null) {
-                    saveProfile(user)
-                } else {
-                    statusText.text = labels().otpFailed
-                }
+        resetPasswordButton.isEnabled = false
+        statusText.text = copy.working
+        currentAuth.sendPasswordResetEmail(email)
+            .addOnSuccessListener {
+                resetPasswordButton.isEnabled = true
+                statusText.text = copy.resetSent
             }
             .addOnFailureListener { error ->
+                resetPasswordButton.isEnabled = true
                 statusText.text = localizedAuthError(error)
             }
     }
 
     private fun localizedAuthError(error: Throwable): String {
-        val errorCode = (error as? FirebaseAuthException)?.errorCode
-        return PhoneAuthErrorMessages.message(
-            errorCode = errorCode,
-            exceptionType = error.javaClass.simpleName,
-            language = language
-        ) ?: labels().otpFailed + (error.localizedMessage ?: error.javaClass.simpleName)
+        val code = (error as? FirebaseAuthException)?.errorCode.orEmpty()
+        val message = when (code) {
+            "ERROR_EMAIL_ALREADY_IN_USE" -> when (language) {
+                "en" -> "This email is already registered. Please log in."
+                "ar" -> "هذا البريد مسجل بالفعل. يرجى تسجيل الدخول."
+                "hi" -> "यह ईमेल पहले से पंजीकृत है। लॉगिन करें।"
+                else -> "এই ইমেইল দিয়ে আগে অ্যাকাউন্ট খোলা হয়েছে। লগইন করুন।"
+            }
+            "ERROR_INVALID_EMAIL" -> labels().invalidEmail
+            "ERROR_WEAK_PASSWORD" -> labels().passwordTooShort
+            "ERROR_USER_NOT_FOUND", "ERROR_WRONG_PASSWORD", "ERROR_INVALID_CREDENTIAL" ->
+                when (language) {
+                    "en" -> "Email or password is incorrect."
+                    "ar" -> "البريد الإلكتروني أو كلمة المرور غير صحيحة."
+                    "hi" -> "ईमेल या पासवर्ड गलत है।"
+                    else -> "ইমেইল অথবা পাসওয়ার্ড ভুল।"
+                }
+            "ERROR_TOO_MANY_REQUESTS" -> when (language) {
+                "en" -> "Too many attempts. Please try again later."
+                "ar" -> "محاولات كثيرة. حاول مرة أخرى لاحقاً."
+                "hi" -> "बहुत अधिक प्रयास। बाद में कोशिश करें।"
+                else -> "অনেকবার চেষ্টা হয়েছে। কিছুক্ষণ পরে আবার চেষ্টা করুন।"
+            }
+            "ERROR_NETWORK_REQUEST_FAILED" -> when (language) {
+                "en" -> "Network error. Check your internet connection."
+                "ar" -> "خطأ في الشبكة. تحقق من اتصال الإنترنت."
+                "hi" -> "नेटवर्क त्रुटि। इंटरनेट जाँचें।"
+                else -> "ইন্টারনেট সংযোগ পরীক্ষা করুন।"
+            }
+            else -> labels().loginFailed + (error.localizedMessage ?: error.javaClass.simpleName)
+        }
+        return message
     }
 
-    private fun saveProfile(user: FirebaseUser) {
+    private fun saveProfile(user: FirebaseUser, successMessage: String) {
         val database = FirebaseFirestore.getInstance()
         val publicProfile = hashMapOf<String, Any>(
             "uid" to user.uid,
-            "name" to "SM CALL User",
+            "name" to (user.email?.substringBefore("@") ?: "SM CALL User"),
             "updatedAt" to FieldValue.serverTimestamp()
         )
         val privateProfile = hashMapOf<String, Any>(
@@ -657,13 +473,14 @@ class MainActivity : Activity() {
             }
             .addOnSuccessListener {
                 renderHome(user)
-                Toast.makeText(this, labels().profileSaved, Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, successMessage, Toast.LENGTH_SHORT).show()
             }
             .addOnFailureListener { error ->
                 renderHome(user)
                 Toast.makeText(
                     this,
-                    "Login হয়েছে, কিন্তু profile save হয়নি: " + (error.localizedMessage ?: ""),
+                    "Login হয়েছে, কিন্তু profile save হয়নি: " +
+                        (error.localizedMessage ?: ""),
                     Toast.LENGTH_LONG
                 ).show()
             }
@@ -675,21 +492,15 @@ class MainActivity : Activity() {
         addBrand(page)
         addText(page, copy.homeTitle, 27f, true)
         addSpace(page, 8)
-        addText(page, copy.signedInAs + ": " + (user.phoneNumber ?: user.uid), 14f)
+        addText(page, copy.signedInAs + ": " + (user.email ?: user.uid), 14f)
         addSpace(page, 20)
 
         addButton(page, copy.chats, {
             startActivity(Intent(this, ChatActivity::class.java).putExtra("language", language))
         })
-        addButton(page, copy.audio, {
-            showNotReady(copy.notReady)
-        }, true)
-        addButton(page, copy.video, {
-            showNotReady(copy.notReady)
-        }, true)
-        addButton(page, copy.groupVideo, {
-            showNotReady(copy.notReady)
-        }, true)
+        addButton(page, copy.audio, { showNotReady(copy.notReady) }, true)
+        addButton(page, copy.video, { showNotReady(copy.notReady) }, true)
+        addButton(page, copy.groupVideo, { showNotReady(copy.notReady) }, true)
         addSpace(page, 16)
         addButton(page, copy.logout, {
             auth?.signOut()
@@ -703,9 +514,6 @@ class MainActivity : Activity() {
 
     private companion object {
         const val STATE_LANGUAGE = "state_language"
-        const val STATE_VERIFICATION_ID = "state_verification_id"
-        const val STATE_VERIFICATION_PHONE = "state_verification_phone"
-        const val STATE_RESEND_AVAILABLE_AT = "state_resend_available_at"
-        const val STATE_PHONE = "state_phone"
+        const val STATE_EMAIL = "state_email"
     }
 }
