@@ -93,6 +93,8 @@ test("another signed-in user can look up a public profile but cannot list profil
   await assertSucceeds(setDoc(doc(alice, "users", "alice"), {
     uid: "alice",
     name: "Alice",
+    email: "alice@example.com",
+    emailVerified: true,
     updatedAt: serverTimestamp()
   }));
 
