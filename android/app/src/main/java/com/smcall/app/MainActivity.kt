@@ -285,7 +285,6 @@ class MainActivity : Activity() {
         val profile = hashMapOf<String, Any>(
             "uid" to user.uid,
             "name" to name,
-            "email" to (user.email ?: ""),
             "emailVerified" to true,
             "updatedAt" to FieldValue.serverTimestamp()
         )
