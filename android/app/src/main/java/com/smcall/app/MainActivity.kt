@@ -85,14 +85,20 @@ class MainActivity : Activity() {
         val signedInUser = auth?.currentUser
         if (signedInUser != null) {
             // Refresh verification status before showing the home screen.
-            signedInUser.reload().addOnCompleteListener {
+            signedInUser.reload().addOnCompleteListener { reloadTask ->
                 val refreshedUser = auth?.currentUser
-                if (refreshedUser != null && refreshedUser.isEmailVerified) {
+                if (reloadTask.isSuccessful && refreshedUser != null && refreshedUser.isEmailVerified) {
                     renderHome(refreshedUser)
-                } else {
+                } else if (reloadTask.isSuccessful) {
                     auth?.signOut()
                     renderLogin()
                     statusText.text = labels().emailNotVerified
+                } else {
+                    auth?.signOut()
+                    renderLogin()
+                    statusText.text = localizedAuthError(
+                        reloadTask.exception ?: Exception("Could not refresh account")
+                    )
                 }
             }
         } else {
@@ -367,9 +373,15 @@ class MainActivity : Activity() {
                 sendVerificationAndSignOut(user, currentAuth, copy)
             } else {
                 // Reload so Firebase returns the latest email-verification state.
-                user.reload().addOnCompleteListener {
+                user.reload().addOnCompleteListener { reloadTask ->
                     val refreshedUser = currentAuth.currentUser
-                    if (refreshedUser != null && refreshedUser.isEmailVerified) {
+                    if (!reloadTask.isSuccessful) {
+                        currentAuth.signOut()
+                        renderLogin()
+                        statusText.text = localizedAuthError(
+                            reloadTask.exception ?: Exception("Could not refresh account")
+                        )
+                    } else if (refreshedUser != null && refreshedUser.isEmailVerified) {
                         saveProfile(refreshedUser, copy.accountCreated)
                     } else if (refreshedUser != null) {
                         sendVerificationAndSignOut(refreshedUser, currentAuth, copy)
