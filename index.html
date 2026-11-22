@@ -257,38 +257,13 @@ p {
 <section id="loginScreen" class="screen active">
   <div class="card">
     <h1 id="welcomeTitle">স্বাগতম SM CALL-এ</h1>
-    <p id="welcomeText">আপনার ফোন নম্বর দিয়ে লগইন করুন।</p>
-
-    <input id="loginPhone" class="input"
-      type="tel" placeholder="+8801XXXXXXXXX">
-
-    <div id="loginCaptcha"></div>
-
-    <button class="primary" id="loginButton"
-      onclick="sendOTP('login')">
-      SMS OTP পাঠান
-    </button>
-
-    <div style="margin-top:18px;padding-top:16px;border-top:1px solid #31557e">
-      <p>OTP ছাড়াই বিনামূল্যে ডেমো ব্যবহার</p>
-      <label for="demoName" style="display:block;margin:12px 0 7px;font-weight:700;color:#ffffff">আপনার ডেমো নাম লিখুন</label>
-      <input id="demoName" class="input" type="text" maxlength="60"
-        placeholder="যেমন: Sajib" autocomplete="nickname"
-        style="display:block;width:100%;min-height:50px;padding:14px;color:#102b55;background:#ffffff;border:2px solid #16c7a0;border-radius:10px;font-size:16px">
-      <button class="secondary" onclick="demoLogin()">
-        লোকাল ডেমো অ্যাকাউন্ট
-      </button>
-      <button class="primary" style="margin-top:10px" onclick="onlineDemoLogin()">
-        বিনামূল্যে Online Demo চালু করুন
-      </button>
-      <p class="status">লোকাল ডেমো শুধু এই ফোনে কাজ করে। Online Demo দিয়ে Firebase-এ সংযোগ করে অন্য ফোনের সঙ্গে চ্যাট করা যাবে; ফোন নম্বর/OTP লাগবে না।</p>
-    </div>
-
-    <p class="link" onclick="showScreen('signupScreen')">
-      নতুন অ্যাকাউন্ট তৈরি করুন
-    </p>
-
-    <p id="loginStatus" class="status"></p>
+    <p id="welcomeText">ইমেইল ও পাসওয়ার্ড দিয়ে লগইন করুন।</p>
+    <input id="loginEmail" class="input" type="email" placeholder="ইমেইল ঠিকানা" autocomplete="email">
+    <input id="loginPassword" class="input" type="password" placeholder="পাসওয়ার্ড" autocomplete="current-password">
+    <button class="primary" onclick="loginWithEmail()">লগইন</button>
+    <p class="link" onclick="resetPassword()">পাসওয়ার্ড ভুলে গেছেন?</p>
+    <p class="link" onclick="showScreen('signupScreen')">নতুন অ্যাকাউন্ট তৈরি করুন</p>
+    <p id="loginStatus" class="status" aria-live="polite"></p>
   </div>
 </section>
 
@@ -296,42 +271,26 @@ p {
 <section id="signupScreen" class="screen">
   <div class="card">
     <h2>নতুন অ্যাকাউন্ট তৈরি করুন</h2>
-
-    <input id="signupName" class="input"
-      type="text" placeholder="আপনার নাম">
-
-    <input id="signupPhone" class="input"
-      type="tel" placeholder="+8801XXXXXXXXX">
-
-    <div id="signupCaptcha"></div>
-
-    <button class="primary" onclick="sendOTP('signup')">
-      OTP পাঠান
-    </button>
-
-    <p id="signupStatus" class="status"></p>
-
-    <p class="link" onclick="showScreen('loginScreen')">
-      লগইন পেজে ফিরে যান
-    </p>
+    <input id="signupName" class="input" type="text" maxlength="60" placeholder="আপনার নাম" autocomplete="name">
+    <input id="signupEmail" class="input" type="email" placeholder="ইমেইল ঠিকানা" autocomplete="email">
+    <input id="signupPassword" class="input" type="password" placeholder="পাসওয়ার্ড (কমপক্ষে ৬ অক্ষর)" autocomplete="new-password">
+    <input id="signupConfirmPassword" class="input" type="password" placeholder="পাসওয়ার্ড আবার লিখুন" autocomplete="new-password">
+    <button class="primary" onclick="createEmailAccount()">অ্যাকাউন্ট তৈরি করুন</button>
+    <p id="signupStatus" class="status" aria-live="polite"></p>
+    <p class="link" onclick="showScreen('loginScreen')">লগইন পেজে ফিরে যান</p>
   </div>
 </section>
 
-<!-- OTP SCREEN -->
-<section id="otpScreen" class="screen">
+<!-- EMAIL VERIFICATION SCREEN -->
+<section id="verificationScreen" class="screen">
   <div class="card">
-    <h2>OTP যাচাই করুন</h2>
-    <p>আপনার ফোনে আসা ৬ সংখ্যার কোড লিখুন।</p>
-
-    <input id="otpCode" class="input"
-      type="text" inputmode="numeric"
-      maxlength="6" placeholder="৬ সংখ্যার OTP">
-
-    <button class="primary" onclick="verifyOTP()">
-      যাচাই করুন
-    </button>
-
-    <p id="otpStatus" class="status"></p>
+    <h2>ইমেইল যাচাই করুন</h2>
+    <p>আপনার ইমেইলে পাঠানো ভেরিফিকেশন লিংক খুলুন। এরপর নিচের বাটনে চাপুন। Spam/Junk ফোল্ডারও পরীক্ষা করুন।</p>
+    <p id="verificationEmail" class="status"></p>
+    <button class="primary" onclick="refreshEmailVerification()">আমি ভেরিফাই করেছি / Reload</button>
+    <button class="secondary" onclick="resendVerificationEmail()">ভেরিফিকেশন লিংক আবার পাঠান</button>
+    <button class="secondary" onclick="logout()">লগআউট</button>
+    <p id="verificationStatus" class="status" aria-live="polite"></p>
   </div>
 </section>
 
@@ -525,219 +484,131 @@ function showScreen(screenId) {
   }
 }
 
-// PHONE NUMBER FORMAT
-function normalizePhone(phone) {
-  phone = phone.trim().replace(/[\s()-]/g, "");
+// EMAIL/PASSWORD AUTHENTICATION
+async function createEmailAccount() {
+  const name = document.getElementById("signupName").value.trim();
+  const email = document.getElementById("signupEmail").value.trim();
+  const password = document.getElementById("signupPassword").value;
+  const confirmPassword = document.getElementById("signupConfirmPassword").value;
+  const status = document.getElementById("signupStatus");
 
-  if (phone.startsWith("01") && phone.length === 11) {
-    return "+88" + phone;
+  if (!name || !email || !password || !confirmPassword) {
+    status.textContent = "সব তথ্য পূরণ করুন।";
+    return;
   }
-
-  if (phone.startsWith("8801")) {
-    return "+" + phone;
+  if (password.length < 6) {
+    status.textContent = "পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে।";
+    return;
   }
-
-  return phone;
-}
-
-// CAPTCHA
-function setupCaptcha(containerId) {
-  if (recaptchaVerifier) {
-    try {
-      recaptchaVerifier.clear();
-    } catch (error) {}
-  }
-
-  recaptchaVerifier = new firebase.auth.RecaptchaVerifier(
-    containerId,
-    { size: "normal" }
-  );
-
-  return recaptchaVerifier.render();
-}
-
-// FREE ONLINE DEMO — uses Firebase Anonymous Authentication (no SMS/OTP).
-// Firebase Console must have Authentication > Sign-in method > Anonymous enabled.
-async function onlineDemoLogin() {
-  const name = document.getElementById("demoName").value.trim();
-
-  if (!name) {
-    document.getElementById("loginStatus").textContent =
-      "Online Demo ব্যবহারের জন্য আপনার নাম লিখুন।";
+  if (password !== confirmPassword) {
+    status.textContent = "দুইটি পাসওয়ার্ড মিলছে না।";
     return;
   }
 
-  if (name.length > 60) {
-    document.getElementById("loginStatus").textContent =
-      "নাম ৬০ অক্ষরের মধ্যে লিখুন।";
-    return;
-  }
-
-  const status = document.getElementById("loginStatus");
-  status.textContent = "Online Demo সংযোগ হচ্ছে...";
-
+  status.textContent = "অ্যাকাউন্ট তৈরি হচ্ছে...";
   try {
-    const credential = await auth.signInAnonymously();
+    const credential = await auth.createUserWithEmailAndPassword(email, password);
     currentUser = credential.user;
-    demoMode = false;
-    demoProfileName = name;
-    signupMode = true;
-    await saveUserProfile();
-    signupMode = false;
-    await showHome();
+    await currentUser.updateProfile({ displayName: name });
+    await currentUser.sendEmailVerification();
+    document.getElementById("verificationEmail").textContent = "ভেরিফিকেশন পাঠানো হয়েছে: " + email;
+    document.getElementById("verificationStatus").textContent = "ইনবক্স বা Spam/Junk ফোল্ডারের লিংকে ক্লিক করুন।";
+    showScreen("verificationScreen");
   } catch (error) {
-    signupMode = false;
-    status.textContent =
-      "Online Demo চালু হয়নি: " + error.message +
-      " | Firebase Console-এ Authentication > Sign-in method থেকে Anonymous চালু করতে হবে।";
+    status.textContent = "অ্যাকাউন্ট তৈরি হয়নি: " + error.message;
   }
 }
 
-// LOCAL FREE DEMO LOGIN — works without Firebase Authentication or billing.
-async function demoLogin() {
-  const name = document.getElementById("demoName").value.trim();
-
-  if (!name) {
-    document.getElementById("loginStatus").textContent =
-      "ডেমো ব্যবহারের জন্য আপনার নাম লিখুন।";
+async function loginWithEmail() {
+  const email = document.getElementById("loginEmail").value.trim();
+  const password = document.getElementById("loginPassword").value;
+  const status = document.getElementById("loginStatus");
+  if (!email || !password) {
+    status.textContent = "ইমেইল ও পাসওয়ার্ড লিখুন।";
     return;
   }
-
-  if (name.length > 60) {
-    document.getElementById("loginStatus").textContent =
-      "নাম ৬০ অক্ষরের মধ্যে লিখুন।";
-    return;
-  }
-
-  demoMode = true;
-  demoProfileName = name;
-  signupMode = false;
-  currentUser = {
-    uid: "demo-" + Date.now().toString(36),
-    phoneNumber: null
-  };
-
-  document.getElementById("loginStatus").textContent = "";
-  await showHome();
-}
-
-// SEND OTP
-async function sendOTP(mode) {
-  const phoneInput = mode === "signup"
-    ? document.getElementById("signupPhone").value
-    : document.getElementById("loginPhone").value;
-
-  const phone = normalizePhone(phoneInput);
-
-  const status = document.getElementById(
-    mode === "signup" ? "signupStatus" : "loginStatus"
-  );
-
-  if (!phone || phone.length < 8) {
-    status.textContent = "সঠিক ফোন নম্বর লিখুন।";
-    return;
-  }
-
-  if (mode === "signup") {
-    const name = document.getElementById("signupName").value.trim();
-
-    if (!name) {
-      status.textContent = "আপনার নাম লিখুন।";
+  status.textContent = "লগইন হচ্ছে...";
+  try {
+    const credential = await auth.signInWithEmailAndPassword(email, password);
+    currentUser = credential.user;
+    await currentUser.reload();
+    currentUser = auth.currentUser;
+    if (!currentUser.emailVerified) {
+      document.getElementById("verificationEmail").textContent = "ভেরিফিকেশন বাকি: " + currentUser.email;
+      document.getElementById("verificationStatus").textContent = "অ্যাকাউন্টে প্রবেশের আগে ইমেইল যাচাই করুন।";
+      showScreen("verificationScreen");
       return;
     }
-  }
-
-  status.textContent = "OTP পাঠানোর প্রস্তুতি চলছে...";
-
-  try {
-    const captchaId = mode === "signup"
-      ? "signupCaptcha"
-      : "loginCaptcha";
-
-    status.textContent = "reCAPTCHA লোড হচ্ছে...";
-
-    await setupCaptcha(captchaId);
-
-    status.textContent = "reCAPTCHA-এর 'I'm not a robot' বক্সে টিক দিন। যাচাই শেষ হলে SMS OTP পাঠানো হবে...";
-
-    confirmationResult = await auth.signInWithPhoneNumber(
-      phone,
-      recaptchaVerifier
-    );
-
-    signupMode = mode === "signup";
-
-    status.textContent = "OTP পাঠানো হয়েছে।";
-    showScreen("otpScreen");
-
-    document.getElementById("otpStatus").textContent =
-      "আপনার ফোনে আসা কোড লিখুন।";
-
-  } catch (error) {
-    status.textContent = "OTP পাঠানো যায়নি: " + error.message;
-    console.error(error);
-  }
-}
-
-// VERIFY OTP
-async function verifyOTP() {
-  const code = document.getElementById("otpCode").value.trim();
-  const status = document.getElementById("otpStatus");
-
-  if (!confirmationResult) {
-    status.textContent = "আগে OTP পাঠাতে হবে।";
-    return;
-  }
-
-  if (!/^\d{6}$/.test(code)) {
-    status.textContent = "৬ সংখ্যার সঠিক OTP লিখুন।";
-    return;
-  }
-
-  status.textContent = "যাচাই হচ্ছে...";
-
-  try {
-    const result = await confirmationResult.confirm(code);
-    currentUser = result.user;
-
     await saveUserProfile();
     await showHome();
-
   } catch (error) {
-    status.textContent = "OTP যাচাই হয়নি: " + error.message;
+    status.textContent = "লগইন হয়নি: " + error.message;
   }
 }
 
-// SAVE USER PROFILE
-async function saveUserProfile() {
-  if (!currentUser) return;
+async function resendVerificationEmail() {
+  const status = document.getElementById("verificationStatus");
+  if (!auth.currentUser) {
+    status.textContent = "আগে আবার লগইন করুন।";
+    return;
+  }
+  status.textContent = "ইমেইল পাঠানো হচ্ছে...";
+  try {
+    await auth.currentUser.sendEmailVerification();
+    status.textContent = "নতুন ভেরিফিকেশন লিংক পাঠানো হয়েছে। Spam/Junk-ও দেখুন।";
+  } catch (error) {
+    status.textContent = "ইমেইল পাঠানো যায়নি: " + error.message;
+  }
+}
 
+async function refreshEmailVerification() {
+  const status = document.getElementById("verificationStatus");
+  if (!auth.currentUser) {
+    status.textContent = "সেশন পাওয়া যায়নি। আবার লগইন করুন।";
+    return;
+  }
+  status.textContent = "ভেরিফিকেশন পরীক্ষা হচ্ছে...";
+  try {
+    await auth.currentUser.reload();
+    currentUser = auth.currentUser;
+    if (currentUser.emailVerified) {
+      await saveUserProfile();
+      await showHome();
+    } else {
+      status.textContent = "এখনো ভেরিফাই হয়নি। ইমেইলের লিংকে ক্লিক করে আবার চেষ্টা করুন।";
+    }
+  } catch (error) {
+    status.textContent = "যাচাই করা যায়নি: " + error.message;
+  }
+}
+
+async function resetPassword() {
+  const email = document.getElementById("loginEmail").value.trim();
+  const status = document.getElementById("loginStatus");
+  if (!email) {
+    status.textContent = "পাসওয়ার্ড রিসেটের জন্য আগে ইমেইল লিখুন।";
+    return;
+  }
+  try {
+    await auth.sendPasswordResetEmail(email);
+    status.textContent = "পাসওয়ার্ড রিসেট লিংক আপনার ইমেইলে পাঠানো হয়েছে।";
+  } catch (error) {
+    status.textContent = "রিসেট ইমেইল পাঠানো যায়নি: " + error.message;
+  }
+}
+
+// SAVE USER PROFILE — only verified email accounts may create a profile.
+async function saveUserProfile() {
+  if (!currentUser || !currentUser.emailVerified) return;
   const uid = currentUser.uid;
   const userRef = db.collection("users").doc(uid);
   const oldData = await userRef.get();
-
-  let name = oldData.exists
-    ? oldData.data().name
-    : "SM CALL User";
-
-  if (signupMode) {
-    const signupName = document.getElementById("signupName")?.value.trim();
-    const demoName = document.getElementById("demoName")?.value.trim();
-    name = signupName || demoName || "SM CALL Demo";
-  }
-
-  // Replace the public profile document so it contains only safe public fields.
-  // Phone numbers are stored separately in /privateUsers/{uid}.
+  const name = (currentUser.displayName || (oldData.exists && oldData.data().name) || "SM CALL User").trim();
   await userRef.set({
     uid: uid,
     name: name,
-    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-  });
-
-  // Keep phone numbers in a private document readable only by its owner.
-  await db.collection("privateUsers").doc(uid).set({
-    uid: uid,
-    phone: currentUser.phoneNumber || "",
+    email: currentUser.email || "",
+    emailVerified: true,
     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
   }, { merge: true });
 }
@@ -750,7 +621,7 @@ async function openProfile() {
   }
 
   const nameEl = document.getElementById("profileName");
-  const phoneEl = document.getElementById("profilePhone");
+  const emailEl = document.getElementById("profileEmail");
   const uidEl = document.getElementById("profileUID");
 
   nameEl.textContent = demoMode
@@ -778,6 +649,11 @@ async function openProfile() {
 // HOME
 async function showHome() {
   if (!currentUser) return;
+  if (!demoMode && !currentUser.emailVerified) {
+    document.getElementById("verificationEmail").textContent = currentUser.email || "";
+    showScreen("verificationScreen");
+    return;
+  }
 
   if (demoMode) {
     document.getElementById("userGreeting").textContent =
@@ -936,7 +812,7 @@ async function createGroupChat() {
   }
 
   if (otherMembers.length + 1 > 20) {
-    status.textContent = "আপনিসহ সর্বোচ্চ ২০ জন রাখা যাবে।";
+    status.textContent = "গ্রুপ চ্যাটে আপনিসহ সর্বোচ্চ ২০ জন রাখা যাবে।";
     return;
   }
 
@@ -1221,8 +1097,8 @@ function setLanguage(nextLanguage) {
   document.documentElement.dir = rtl ? "rtl" : "ltr";
   const t = {
     bn: {
-      welcome: "স্বাগতম SM CALL-এ", intro: "আপনার ফোন নম্বর দিয়ে লগইন করুন।",
-      otp: "SMS OTP পাঠান", demo: "বিনামূল্যে Online Demo চালু করুন",
+      welcome: "স্বাগতম SM CALL-এ", intro: "ইমেইল ও পাসওয়ার্ড দিয়ে লগইন করুন।",
+      otp: "লগইন", demo: "বিনামূল্যে Online Demo চালু করুন",
       signup: "নতুন অ্যাকাউন্ট তৈরি করুন", audio: "Audio Call",
       video: "Video Call", messages: "Messages", group: "Group Chat",
       home: "Home", chats: "Chats", profile: "Profile",
@@ -1232,8 +1108,8 @@ function setLanguage(nextLanguage) {
       back: "হোমে ফিরে যান"
     },
     en: {
-      welcome: "Welcome to SM CALL", intro: "Sign in with your phone number.",
-      otp: "Send SMS OTP", demo: "Start Free Online Demo",
+      welcome: "Welcome to SM CALL", intro: "Sign in with your email and password.",
+      otp: "Login", demo: "Start Free Online Demo",
       signup: "Create a new account", audio: "Audio Call",
       video: "Video Call", messages: "Messages", group: "Group Chat",
       home: "Home", chats: "Chats", profile: "Profile",
@@ -1243,8 +1119,8 @@ function setLanguage(nextLanguage) {
       back: "Back to Home"
     },
     ar: {
-      welcome: "مرحباً بك في SM CALL", intro: "سجّل الدخول برقم هاتفك.",
-      otp: "إرسال رمز SMS", demo: "ابدأ التجربة المجانية",
+      welcome: "مرحباً بك في SM CALL", intro: "سجّل الدخول بالبريد الإلكتروني وكلمة المرور.",
+      otp: "تسجيل الدخول", demo: "ابدأ التجربة المجانية",
       signup: "إنشاء حساب جديد", audio: "مكالمة صوتية",
       video: "مكالمة فيديو", messages: "الرسائل", group: "محادثة جماعية",
       home: "الرئيسية", chats: "المحادثات", profile: "الملف الشخصي",
@@ -1254,8 +1130,8 @@ function setLanguage(nextLanguage) {
       back: "العودة للرئيسية"
     },
     hi: {
-      welcome: "SM CALL में आपका स्वागत है", intro: "अपने फ़ोन नंबर से लॉगिन करें।",
-      otp: "SMS OTP भेजें", demo: "मुफ़्त ऑनलाइन डेमो शुरू करें",
+      welcome: "SM CALL में आपका स्वागत है", intro: "ईमेल और पासवर्ड से लॉगिन करें।",
+      otp: "लॉगिन", demo: "मुफ़्त ऑनलाइन डेमो शुरू करें",
       signup: "नया खाता बनाएँ", audio: "ऑडियो कॉल",
       video: "वीडियो कॉल", messages: "संदेश", group: "ग्रुप चैट",
       home: "होम", chats: "चैट", profile: "प्रोफ़ाइल",
@@ -1268,7 +1144,7 @@ function setLanguage(nextLanguage) {
 
   document.getElementById("welcomeTitle").textContent = t.welcome;
   document.getElementById("welcomeText").textContent = t.intro;
-  document.getElementById("loginButton").textContent = t.otp;
+
   const languageButton = document.querySelector(".language");
   if (languageButton) languageButton.textContent = languageLabels[language] + " ▾";
 
@@ -1305,26 +1181,32 @@ function changeLanguage() {
   setLanguage(supportedLanguages[(index + 1) % supportedLanguages.length]);
 }
 
-// AUTH STATE
+// AUTH STATE — unverified users are always kept outside the app.
 auth.onAuthStateChanged(async user => {
-  if (demoMode) return;
-
-  if (user) {
-    currentUser = user;
-
-    try {
-      await saveUserProfile();
-      await showHome();
-    } catch (error) {
-      console.error("Profile error:", error);
-      showScreen("homeScreen");
+  currentUser = user;
+  if (!user) {
+    showScreen("loginScreen");
+    return;
+  }
+  try {
+    await user.reload();
+    currentUser = auth.currentUser;
+    if (!currentUser.emailVerified) {
+      document.getElementById("verificationEmail").textContent = currentUser.email || "";
+      document.getElementById("verificationStatus").textContent =
+        "ইমেইল ভেরিফাই না করা পর্যন্ত SM CALL-এর মূল ফিচার ব্যবহার করা যাবে না।";
+      showScreen("verificationScreen");
+      return;
     }
-  } else {
-    currentUser = null;
+    await saveUserProfile();
+    await showHome();
+  } catch (error) {
+    console.error("Authentication/profile error:", error);
     showScreen("loginScreen");
   }
 });
 
+const MAX_GROUP_CALL_PARTICIPANTS = 5; // Future audio/video group-call limit.
 </script>
 </body>
 </html>
