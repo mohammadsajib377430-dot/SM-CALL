@@ -62,7 +62,16 @@ function chatData(members, type = "group", name = "Test group") {
   return data;
 }
 
-test("an unverified account cannot access Firestore", async () => {\n  const pending = unverifiedUserDb("pending");\n  await assertFails(getDoc(doc(pending, "users", "someone")));\n  await assertFails(setDoc(doc(pending, "users", "pending"), {\n    uid: "pending", name: "Pending", email: "pending@example.com",\n    emailVerified: false, updatedAt: serverTimestamp()\n  }));\n});\n\ntest("a signed-in user can create and read their own public profile", async () => {
+test("an unverified account cannot access Firestore", async () => {
+  const pending = unverifiedUserDb("pending");
+  await assertFails(getDoc(doc(pending, "users", "someone")));
+  await assertFails(setDoc(doc(pending, "users", "pending"), {
+    uid: "pending", name: "Pending", email: "pending@example.com",
+    emailVerified: false, updatedAt: serverTimestamp()
+  }));
+});
+
+test("a signed-in user can create and read their own public profile", async () => {
   const alice = userDb("alice");
   const profile = doc(alice, "users", "alice");
 
