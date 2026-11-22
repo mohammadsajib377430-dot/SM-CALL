@@ -38,5 +38,7 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:35.1.0"))
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-firestore")
+    // Maintained WebRTC Android core for real-time audio/video.
+    implementation("io.github.webrtc-sdk:android:150.7871.08")
     testImplementation("junit:junit:4.13.2")
 }
