@@ -1,6 +1,9 @@
 package com.smcall.app
 
 import android.app.Activity
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
@@ -21,6 +24,8 @@ import com.google.firebase.auth.FirebaseAuthException
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.firestore.Query
 
 class MainActivity : Activity() {
     private var auth: FirebaseAuth? = null
@@ -30,6 +35,7 @@ class MainActivity : Activity() {
     private lateinit var passwordInput: EditText
     private lateinit var nameInput: EditText
     private lateinit var statusText: TextView
+    private var messageListener: ListenerRegistration? = null
 
     private data class Labels(
         val welcome: String, val intro: String, val name: String,
@@ -297,12 +303,152 @@ class MainActivity : Activity() {
         val page = baseScreen(); addBrand(page)
         addText(page, copy.home, 27f, true); addSpace(page, 8)
         addText(page, user.email ?: "", 15f); addSpace(page, 18)
-        addButton(page, copy.chats) { showNotReady() }
+        addButton(page, copy.chats) { openChats(user) }
         addButton(page, copy.audio, true) { showNotReady() }
         addButton(page, copy.video, true) { showNotReady() }
         addButton(page, copy.groupAudio, true) { showNotReady() }
         addButton(page, copy.groupVideo, true) { showNotReady() }
         addButton(page, copy.logout, true) { auth?.signOut(); signupMode = false; renderAuth() }
+    }
+
+
+    private fun openChats(user: FirebaseUser) {
+        messageListener?.remove()
+        val page = baseScreen(); addBrand(page)
+        addText(page, "চ্যাট", 27f, true); addSpace(page, 8)
+        addText(page, "আপনার User ID বন্ধুকে পাঠান। বন্ধুর User ID দিয়ে নতুন ব্যক্তিগত চ্যাট শুরু করুন।", 14f)
+        addSpace(page, 8)
+        addText(page, user.uid, 12f)
+        addButton(page, "আমার User ID কপি করুন", true) {
+            val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            clipboard.setPrimaryClip(ClipData.newPlainText("SM CALL User ID", user.uid))
+            Toast.makeText(this, "User ID কপি হয়েছে।", Toast.LENGTH_SHORT).show()
+        }
+        addSpace(page, 14)
+        val friendId = addInput(page, "বন্ধুর User ID লিখুন", InputType.TYPE_CLASS_TEXT)
+        addButton(page, "নতুন চ্যাট শুরু করুন") {
+            val id = friendId.text.toString().trim()
+            if (id.isBlank() || id == user.uid) {
+                Toast.makeText(this, "অন্য ব্যবহারকারীর সঠিক User ID দিন।", Toast.LENGTH_LONG).show()
+            } else openPersonalChat(user, id)
+        }
+        addSpace(page, 18)
+        addText(page, "আগের চ্যাট", 19f, true)
+        FirebaseFirestore.getInstance().collection("chats")
+            .whereArrayContains("members", user.uid)
+            .addSnapshotListener(this) { snapshot, error ->
+                if (error != null) {
+                    Toast.makeText(this, "চ্যাট লোড হয়নি: ${error.localizedMessage}", Toast.LENGTH_LONG).show()
+                    return@addSnapshotListener
+                }
+                if (snapshot == null) return@addSnapshotListener
+                snapshot.documents.forEach { chat ->
+                    val members = chat.get("members") as? List<*> ?: return@forEach
+                    val otherUid = members.filterIsInstance<String>().firstOrNull { it != user.uid } ?: return@forEach
+                    FirebaseFirestore.getInstance().collection("users").document(otherUid).get()
+                        .addOnSuccessListener { profile ->
+                            val title = profile.getString("name")?.takeIf { it.isNotBlank() } ?: otherUid.take(10)
+                            addButton(page, title) { openChatMessages(user, chat.id, title) }
+                        }
+                }
+            }
+        addSpace(page, 12)
+        addButton(page, "হোমে ফিরে যান", true) { renderHome(user) }
+    }
+
+    private fun openPersonalChat(user: FirebaseUser, friendUid: String) {
+        val db = FirebaseFirestore.getInstance()
+        db.collection("users").document(friendUid).get()
+            .addOnSuccessListener { profile ->
+                if (!profile.exists()) {
+                    Toast.makeText(this, "এই User ID পাওয়া যায়নি।", Toast.LENGTH_LONG).show()
+                    return@addOnSuccessListener
+                }
+                val ids = listOf(user.uid, friendUid).sorted()
+                val chatId = ids.joinToString("_")
+                val chatRef = db.collection("chats").document(chatId)
+                chatRef.get().addOnSuccessListener { existing ->
+                    val title = profile.getString("name")?.takeIf { it.isNotBlank() } ?: friendUid.take(10)
+                    if (existing.exists()) openChatMessages(user, chatId, title)
+                    else {
+                        val data = hashMapOf<String, Any>(
+                            "members" to ids,
+                            "type" to "personal",
+                            "createdAt" to com.google.firebase.Timestamp.now()
+                        )
+                        chatRef.set(data).addOnSuccessListener {
+                            openChatMessages(user, chatId, title)
+                        }.addOnFailureListener {
+                            Toast.makeText(this, "চ্যাট তৈরি হয়নি: ${it.localizedMessage}", Toast.LENGTH_LONG).show()
+                        }
+                    }
+                }.addOnFailureListener {
+                    Toast.makeText(this, "চ্যাট খোলা যায়নি: ${it.localizedMessage}", Toast.LENGTH_LONG).show()
+                }
+            }.addOnFailureListener {
+                Toast.makeText(this, "ব্যবহারকারী খুঁজে পাওয়া যায়নি: ${it.localizedMessage}", Toast.LENGTH_LONG).show()
+            }
+    }
+
+    private fun openChatMessages(user: FirebaseUser, chatId: String, title: String) {
+        messageListener?.remove()
+        renderChatMessages(user, chatId, title)
+    }
+
+    private fun renderChatMessages(user: FirebaseUser, chatId: String, title: String) {
+        val page = baseScreen(); addBrand(page)
+        addText(page, title, 23f, true); addSpace(page, 6)
+        addText(page, "ব্যক্তিগত চ্যাট", 13f)
+        val messagesBox = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        val messageScroll = ScrollView(this).apply {
+            isFillViewport = false
+            addView(messagesBox, ViewGroup.LayoutParams(-1, -2))
+        }
+        val scrollParams = LinearLayout.LayoutParams(-1, 0, 1f)
+        scrollParams.topMargin = dp(12); scrollParams.bottomMargin = dp(12)
+        page.addView(messageScroll, scrollParams)
+        val input = addInput(page, "মেসেজ লিখুন...", InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE)
+        addButton(page, "মেসেজ পাঠান") {
+            val text = input.text.toString().trim()
+            if (text.isNotEmpty()) {
+                val data = hashMapOf<String, Any>(
+                    "sender" to user.uid,
+                    "text" to text,
+                    "createdAt" to com.google.firebase.Timestamp.now()
+                )
+                FirebaseFirestore.getInstance().collection("chats").document(chatId)
+                    .collection("messages").add(data)
+                    .addOnSuccessListener { input.text.clear() }
+                    .addOnFailureListener {
+                        Toast.makeText(this, "মেসেজ পাঠানো যায়নি: ${it.localizedMessage}", Toast.LENGTH_LONG).show()
+                    }
+            }
+        }
+        addButton(page, "চ্যাট তালিকায় ফিরুন", true) { messageListener?.remove(); openChats(user) }
+        messageListener = FirebaseFirestore.getInstance().collection("chats").document(chatId)
+            .collection("messages").orderBy("createdAt", Query.Direction.ASCENDING)
+            .addSnapshotListener(this) { snapshot, error ->
+                if (error != null) {
+                    Toast.makeText(this, "মেসেজ লোড হয়নি: ${error.localizedMessage}", Toast.LENGTH_LONG).show()
+                    return@addSnapshotListener
+                }
+                messagesBox.removeAllViews()
+                snapshot?.documents?.forEach { doc ->
+                    val sender = doc.getString("sender").orEmpty()
+                    val body = doc.getString("text").orEmpty()
+                    val line = TextView(this).apply {
+                        text = (if (sender == user.uid) "আপনি: " else "$title: ") + body
+                        textSize = 15f
+                        setTextColor(Color.WHITE)
+                        setPadding(dp(12), dp(10), dp(12), dp(10))
+                        background = rounded(if (sender == user.uid) Color.rgb(22, 120, 110) else Color.rgb(28, 78, 125))
+                    }
+                    val params = LinearLayout.LayoutParams(-1, -2)
+                    params.bottomMargin = dp(8)
+                    messagesBox.addView(line, params)
+                }
+                messageScroll.post { messageScroll.fullScroll(View.FOCUS_DOWN) }
+            }
     }
 
     private fun showNotReady() {
