@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.Intent
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
@@ -36,6 +37,7 @@ class MainActivity : Activity() {
     private lateinit var nameInput: EditText
     private lateinit var statusText: TextView
     private var messageListener: ListenerRegistration? = null
+    private val phoneAuthRequestCode = 4201
 
     private data class Labels(
         val welcome: String, val intro: String, val name: String,
@@ -104,6 +106,14 @@ class MainActivity : Activity() {
         auth = if (FirebaseApp.getApps(this).isNotEmpty()) FirebaseAuth.getInstance() else null
         val user = auth?.currentUser
         if (user == null) renderAuth() else refreshSignedInUser(user)
+    }
+
+    @Suppress("DEPRECATION")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == phoneAuthRequestCode && resultCode == RESULT_OK) {
+            auth?.currentUser?.let { refreshSignedInUser(it) }
+        }
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -184,11 +194,14 @@ class MainActivity : Activity() {
         return button
     }
 
+    private fun isVerifiedAccount(user: FirebaseUser): Boolean =
+        user.isEmailVerified || !user.phoneNumber.isNullOrBlank()
+
     private fun renderCurrentScreen() {
         val user = auth?.currentUser
         when {
             user == null -> renderAuth()
-            user.isEmailVerified -> renderHome(user)
+            isVerifiedAccount(user) -> renderHome(user)
             else -> renderVerification(user)
         }
     }
@@ -208,7 +221,20 @@ class MainActivity : Activity() {
         addButton(page, if (signupMode) copy.switchToLogin else copy.switchToSignup, true) {
             signupMode = !signupMode; renderAuth()
         }
-        if (!signupMode) addButton(page, copy.forgot, true) { resetPassword() }
+        if (!signupMode) {
+            addButton(page, copy.forgot, true) { resetPassword() }
+            val phoneLabel = when (language) {
+                "en" -> "Sign in with phone OTP"
+                "ar" -> "تسجيل الدخول برمز الهاتف"
+                "hi" -> "फोन OTP से लॉगिन"
+                else -> "ফোন নম্বর দিয়ে OTP লগইন"
+            }
+            addButton(page, phoneLabel, true) {
+                val intent = Intent(this, PhoneOtpActivity::class.java)
+                    .putExtra(PhoneOtpActivity.EXTRA_LANGUAGE, language)
+                startActivityForResult(intent, phoneAuthRequestCode)
+            }
+        }
     }
 
     private fun createAccount() {
@@ -259,7 +285,7 @@ class MainActivity : Activity() {
         user.reload().addOnSuccessListener {
             val fresh = auth?.currentUser
             if (fresh == null) renderAuth()
-            else if (fresh.isEmailVerified) saveProfile(fresh)
+            else if (isVerifiedAccount(fresh)) saveProfile(fresh)
             else renderVerification(fresh)
         }.addOnFailureListener { renderVerification(user, authError(it)) }
     }
@@ -285,9 +311,13 @@ class MainActivity : Activity() {
         val profile = hashMapOf<String, Any>(
             "uid" to user.uid,
             "name" to name,
-            "emailVerified" to true,
             "updatedAt" to FieldValue.serverTimestamp()
         )
+        if (!user.phoneNumber.isNullOrBlank()) {
+            profile["phoneVerified"] = true
+        } else {
+            profile["emailVerified"] = user.isEmailVerified
+        }
         FirebaseFirestore.getInstance().collection("users").document(user.uid)
             .set(profile)
             .addOnSuccessListener { renderHome(user); Toast.makeText(this, labels().profileSaved, Toast.LENGTH_SHORT).show() }
@@ -301,7 +331,7 @@ class MainActivity : Activity() {
         val copy = labels()
         val page = baseScreen(); addBrand(page)
         addText(page, copy.home, 27f, true); addSpace(page, 8)
-        addText(page, user.email ?: "", 15f); addSpace(page, 18)
+        addText(page, user.email ?: user.phoneNumber.orEmpty(), 15f); addSpace(page, 18)
         addButton(page, copy.chats) {
             Toast.makeText(this, "চ্যাট খুলছে...", Toast.LENGTH_SHORT).show()
             openChats(user)
