@@ -56,7 +56,8 @@ class PhoneOtpActivity : Activity() {
         val tooMany: String,
         val invalidOtp: String,
         val expired: String,
-        val providerOff: String
+        val providerOff: String,
+        val autoTimeout: String
     )
 
     private fun copy(): Copy = when (language) {
@@ -69,7 +70,8 @@ class PhoneOtpActivity : Activity() {
             "Firebase Phone Auth billing is not enabled. Use a configured test phone number or enable billing.",
             "SMS quota exceeded. Use a Firebase test phone number or wait for quota reset.",
             "Too many attempts. Wait before trying again.", "The verification code is incorrect.",
-            "The verification session expired. Request a new code.", "Phone sign-in is disabled in Firebase Authentication."
+            "The verification session expired. Request a new code.", "Phone sign-in is disabled in Firebase Authentication.",
+            "Automatic SMS detection timed out. Enter the code from your SMS."
         )
         "ar" -> Copy(
             "تسجيل الدخول بالهاتف", "أدخل رقم الهاتف بالصيغة الدولية مع رمز الدولة وعلامة +.",
@@ -80,7 +82,8 @@ class PhoneOtpActivity : Activity() {
             "فوترة Firebase Phone Auth غير مفعّلة. استخدم رقم اختبار أو فعّل الفوترة.",
             "تم تجاوز حصة الرسائل. استخدم رقم اختبار أو انتظر إعادة تعيين الحصة.",
             "محاولات كثيرة. انتظر قبل المحاولة مجددًا.", "رمز التحقق غير صحيح.",
-            "انتهت جلسة التحقق. اطلب رمزًا جديدًا.", "تسجيل الدخول بالهاتف معطّل في Firebase."
+            "انتهت جلسة التحقق. اطلب رمزًا جديدًا.", "تسجيل الدخول بالهاتف معطّل في Firebase.",
+            "انتهى الكشف التلقائي عن الرسالة. أدخل الرمز الموجود في الرسالة."
         )
         "hi" -> Copy(
             "फोन से लॉगिन", "देश के कोड और + के साथ अंतरराष्ट्रीय प्रारूप में फोन नंबर लिखें।",
@@ -91,7 +94,8 @@ class PhoneOtpActivity : Activity() {
             "Firebase Phone Auth billing चालू नहीं है। Test phone number उपयोग करें या billing चालू करें।",
             "SMS quota समाप्त है। Test phone number उपयोग करें या quota reset होने दें।",
             "बहुत अधिक प्रयास हुए। थोड़ी देर बाद कोशिश करें।", "OTP गलत है।",
-            "सत्यापन सत्र समाप्त हो गया। नया OTP माँगें।", "Firebase में Phone sign-in बंद है।"
+            "सत्यापन सत्र समाप्त हो गया। नया OTP माँगें।", "Firebase में Phone sign-in बंद है।",
+            "SMS अपने आप नहीं पढ़ा गया। संदेश में आया OTP लिखें।"
         )
         else -> Copy(
             "ফোন নম্বর দিয়ে লগইন", "দেশের কোডসহ আন্তর্জাতিক ফরম্যাটে ফোন নম্বর লিখুন।",
@@ -102,7 +106,8 @@ class PhoneOtpActivity : Activity() {
             "Firebase Phone Auth-এর Billing চালু নেই। Test Phone Number ব্যবহার করুন অথবা Billing চালু করুন।",
             "SMS কোটা শেষ। Test Phone Number ব্যবহার করুন অথবা কোটা রিসেট হওয়া পর্যন্ত অপেক্ষা করুন।",
             "অনেকবার চেষ্টা হয়েছে। কিছুক্ষণ পরে আবার চেষ্টা করুন।", "OTP সঠিক নয়।",
-            "যাচাইয়ের সময় শেষ। নতুন OTP পাঠান।", "Firebase Authentication-এ Phone Sign-in বন্ধ আছে।"
+            "যাচাইয়ের সময় শেষ। নতুন OTP পাঠান।", "Firebase Authentication-এ Phone Sign-in বন্ধ আছে।",
+            "স্বয়ংক্রিয় SMS শনাক্তকরণের সময় শেষ। SMS-এ পাওয়া OTP লিখুন।"
         )
     }
 
@@ -272,7 +277,7 @@ class PhoneOtpActivity : Activity() {
 
         override fun onCodeAutoRetrievalTimeOut(id: String) {
             verificationId = id
-            statusText.text = copy().expired
+            statusText.text = copy().autoTimeout
         }
     }
 
