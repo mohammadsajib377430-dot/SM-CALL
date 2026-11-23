@@ -302,7 +302,10 @@ class MainActivity : Activity() {
         val page = baseScreen(); addBrand(page)
         addText(page, copy.home, 27f, true); addSpace(page, 8)
         addText(page, user.email ?: "", 15f); addSpace(page, 18)
-        addButton(page, copy.chats) { openChats(user) }
+        addButton(page, copy.chats) {
+            Toast.makeText(this, "চ্যাট খুলছে...", Toast.LENGTH_SHORT).show()
+            openChats(user)
+        }
         addButton(page, copy.audio, true) { showNotReady() }
         addButton(page, copy.video, true) { showNotReady() }
         addButton(page, copy.groupAudio, true) { showNotReady() }
