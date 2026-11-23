@@ -52,6 +52,12 @@ function unverifiedUserDb(uid) {
   }).firestore();
 }
 
+function phoneUserDb(uid) {
+  return testEnv.authenticatedContext(uid, {
+    phone_number: "+8801712345678"
+  }).firestore();
+}
+
 function chatData(members, type = "group", name = "Test group") {
   const data = {
     members,
@@ -82,6 +88,39 @@ test("a signed-in user can create and read their own public profile", async () =
   }));
 
   await assertSucceeds(getDoc(profile));
+});
+
+test("a Firebase Phone Auth user can create a phone-verified profile and use chats", async () => {
+  const phoneUser = phoneUserDb("phone-user");
+
+  await assertSucceeds(setDoc(doc(phoneUser, "users", "phone-user"), {
+    uid: "phone-user",
+    name: "Phone User",
+    phoneVerified: true,
+    updatedAt: serverTimestamp()
+  }));
+
+  await assertSucceeds(setDoc(doc(phoneUser, "chats", "phone-chat"), {
+    members: ["phone-user", "friend"],
+    type: "personal",
+    createdAt: serverTimestamp()
+  }));
+
+  await assertSucceeds(addDoc(collection(phoneUser, "chats", "phone-chat", "messages"), {
+    sender: "phone-user",
+    text: "Phone-authenticated message",
+    createdAt: serverTimestamp()
+  }));
+});
+
+test("a phone account cannot claim email verification in its public profile", async () => {
+  const phoneUser = phoneUserDb("phone-user");
+  await assertFails(setDoc(doc(phoneUser, "users", "phone-user"), {
+    uid: "phone-user",
+    name: "Phone User",
+    emailVerified: true,
+    updatedAt: serverTimestamp()
+  }));
 });
 
 test("another signed-in user can look up a public profile but cannot list profiles", async () => {

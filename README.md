@@ -11,7 +11,7 @@ SM CALL is an Android-first communication project. The public GitHub Pages site 
 ## What is currently implemented
 
 - Mobile-friendly web prototype login and home screens.
-- A first native Android project scaffold in `android/` with a four-language phone-login UI and Firebase Auth/Firestore integration code; it still needs the Firebase Android config file and physical-device testing.
+- A native Android app in `android/` with Firebase Email/Password authentication and personal-chat code. The Android client configuration is present for Firebase project `sm-call-665e5`; phone OTP support is proposed in [PR #2](https://github.com/mohammadsajib377430-dot/SM-CALL/pull/2) and still needs CI, Firebase Console setup, and physical-device testing.
 - Firebase Anonymous Authentication option labelled **Online Demo**. This does not verify a phone number and does not send an OTP.
 - Local-only demo account option. Local demo data stays in the same browser/device and cannot chat with another device.
 - Firebase user profile documents. Public display names are stored in `users/{uid}`; phone numbers are stored separately in owner-only `privateUsers/{uid}`.
@@ -23,7 +23,7 @@ SM CALL is an Android-first communication project. The public GitHub Pages site 
 
 ## Not implemented / not verified as working
 
-- Real SMS OTP sign-in. The current Online Demo uses anonymous sign-in. Phone OTP previously returned `auth/billing-not-enabled`; it requires Firebase phone-auth setup, an eligible billing configuration, authorized domains, and SMS region settings.
+- Real SMS OTP delivery is not yet verified. [PR #2](https://github.com/mohammadsajib377430-dot/SM-CALL/pull/2) adds a native Android Phone Auth flow, but it requires review/merge, enabling the Phone provider in Android Firebase project `sm-call-665e5`, SHA registration, SMS region policy, billing/quota checks, and physical-device testing. The Web Demo's Anonymous Login is separate and does not verify a phone number.
 - Normal carrier SMS to phone numbers. Firestore chat messages are in-app messages, not SMS delivered to a phone's messaging inbox. Carrier SMS requires an SMS provider and paid usage.
 - One-to-one audio calls and video calls.
 - Group audio/video calls for up to 20 people. These require WebRTC signaling and, for reliable large group calls, an SFU/TURN service and its configuration.
@@ -63,8 +63,8 @@ The rules in `firestore.rules` restrict profile and chat access. Updating the fi
 2. Verify group creation and group messaging with two or more real Online Demo accounts.
 3. Finish localization and improve account/profile flows.
 4. Add secure call signaling and integrate a configured WebRTC/SFU provider before enabling audio/video call buttons.
-5. Register the native Android package `com.smcall.app` in Firebase, add `android/app/google-services.json`, then build and test the APK on a physical Android device.
-6. Enable phone OTP and carrier SMS only after the required providers and billing are configured.
+5. The Android Firebase client configuration is present for project `sm-call-665e5`; enable Phone Authentication, register current SHA-1/SHA-256 fingerprints, configure SMS regions, and test with a Firebase test phone number before real SMS.
+6. Decide separately whether to migrate the GitHub Pages web client from `sm-call-bf23e` to the Android project's Firebase project. Do not assume accounts/data are shared.
 
 ## Important
 
