@@ -9,19 +9,19 @@ Native Android client for SM CALL.
 - UI language options: Bengali, English, Arabic and Hindi (coverage is partial and still needs review)
 - Firebase Android project in the checked-in client configuration: `sm-call-665e5`
 
-## Current verified repository facts — 23 November 2026
+## Current verified repository facts — 23 November 2026 (updated after merge)
 
 - `android/app/google-services.json` exists and identifies Firebase project `sm-call-665e5` for package `com.smcall.app`.
 - The GitHub Pages web prototype in the root `index.html` still uses project `sm-call-bf23e`. These Firebase projects do not share Authentication users or Firestore data.
-- The latest confirmed Firebase-configured debug APK is from [workflow run 44993030612](https://github.com/mohammadsajib377430-dot/SM-CALL/actions/runs/44993030612). It predates the phone-OTP pull request described below.
+- The latest phone-OTP Firebase-enabled debug APK is from [workflow run 45123936308](https://github.com/mohammadsajib377430-dot/SM-CALL/actions/runs/45123936308). The Android unit-test and APK-build steps passed; the Firestore emulator/prototype workflow [45123936341](https://github.com/mohammadsajib377430-dot/SM-CALL/actions/runs/45123936341) also passed.
 - The native app already contains Email/Password registration, email verification, password reset, a personal-chat screen and Firestore message listeners. The personal-chat flow has not been confirmed by a new physical-device test in this update.
 - Audio/video buttons still show a not-implemented message. The WebRTC dependency alone does not implement media transport or signaling.
 - Firestore chat-group rules allow up to 20 members, but native group-chat invitation and membership management are not complete.
 - Firestore call-room rules remain limited to 5 participants. The requested 20-person group video target is not implemented.
 
-## Phone OTP implementation in pull request
+## Phone OTP implementation — merged 23 November 2026
 
-Pull request [#2 — Add native Firebase phone OTP sign-in](https://github.com/mohammadsajib377430-dot/SM-CALL/pull/2) adds:
+The implementation from [PR #2 — Add native Firebase phone OTP sign-in](https://github.com/mohammadsajib377430-dot/SM-CALL/pull/2) is merged into `main` as [commit 1b09620](https://github.com/mohammadsajib377430-dot/SM-CALL/commit/1b09620e800043f13c4bf28875de265f5824fe6e). It adds:
 
 - A native `PhoneOtpActivity` using Firebase `PhoneAuthProvider`.
 - E.164 phone input, SMS code entry, automatic verification callback, verification-session handling and resend-token support.
@@ -29,7 +29,7 @@ Pull request [#2 — Add native Firebase phone OTP sign-in](https://github.com/m
 - A phone OTP option on the existing sign-in screen; Email/Password remains available for compatibility.
 - Phone-verified profile handling in Android and matching Firestore rule/test changes.
 
-The pull request is not merged. Its CI result and physical-device behavior must be checked before treating phone OTP as complete.
+The CI checks passed: Android unit tests, Firebase configuration validation, APK assembly/artifact upload, prototype smoke checks and Firestore emulator tests. Real Firebase SMS delivery, production-rule deployment and physical-device behavior are still unverified.
 
 ## Firebase Console setup still required
 
