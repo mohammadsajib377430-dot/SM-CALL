@@ -7,9 +7,13 @@ service cloud.firestore {
     function signedIn() {
       return request.auth != null
         && (
-          request.auth.token.email_verified == true
+          (
+            request.auth.token.keys().hasAny(['email_verified'])
+            && request.auth.token.email_verified == true
+          )
           || (
-            request.auth.token.phone_number is string
+            request.auth.token.keys().hasAny(['phone_number'])
+            && request.auth.token.phone_number is string
             && request.auth.token.phone_number.size() > 0
           )
         );
@@ -44,6 +48,7 @@ service cloud.firestore {
           (
             request.resource.data.keys().hasAll(['emailVerified'])
             && request.resource.data.emailVerified == true
+            && request.auth.token.keys().hasAny(['email_verified'])
             && request.auth.token.email_verified == true
             && !request.resource.data.keys().hasAny(['phoneVerified'])
           )
@@ -51,6 +56,7 @@ service cloud.firestore {
           (
             request.resource.data.keys().hasAll(['phoneVerified'])
             && request.resource.data.phoneVerified == true
+            && request.auth.token.keys().hasAny(['phone_number'])
             && request.auth.token.phone_number is string
             && !request.resource.data.keys().hasAny(['emailVerified'])
           )
