@@ -159,7 +159,7 @@ class PhoneOtpActivity : Activity() {
     }
 
     private fun render() {
-        val text = copy()
+        val labels = copy()
         val scroll = ScrollView(this).apply { isFillViewport = true }
         val page = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -183,7 +183,7 @@ class PhoneOtpActivity : Activity() {
         page.addView(brand, LinearLayout.LayoutParams(-1, -2))
 
         val title = TextView(this).apply {
-            text = text.title
+            text = labels.title
             textSize = 25f
             setTextColor(Color.WHITE)
             gravity = if (language == "ar") Gravity.RIGHT else Gravity.LEFT
@@ -193,14 +193,14 @@ class PhoneOtpActivity : Activity() {
         page.addView(title, titleParams)
 
         val intro = TextView(this).apply {
-            text = text.intro
+            text = labels.intro
             textSize = 15f
             setTextColor(Color.LTGRAY)
             gravity = if (language == "ar") Gravity.RIGHT else Gravity.LEFT
         }
         page.addView(intro, LinearLayout.LayoutParams(-1, -2))
 
-        phoneInput = addInput(page, text.phoneHint, InputType.TYPE_CLASS_PHONE)
+        phoneInput = addInput(page, labels.phoneHint, InputType.TYPE_CLASS_PHONE)
         statusText = TextView(this).apply {
             textSize = 14f
             setTextColor(Color.WHITE)
@@ -210,25 +210,25 @@ class PhoneOtpActivity : Activity() {
         statusParams.topMargin = dp(12)
         page.addView(statusText, statusParams)
 
-        addButton(page, text.send) { requestCode(forceResend = false) }
+        addButton(page, labels.send) { requestCode(forceResend = false) }
 
-        codeInput = addInput(page, text.codeHint, InputType.TYPE_CLASS_NUMBER)
+        codeInput = addInput(page, labels.codeHint, InputType.TYPE_CLASS_NUMBER)
         codeInput.visibility = View.GONE
 
-        verifyButton = addButton(page, text.verify) { verifyCode() }
+        verifyButton = addButton(page, labels.verify) { verifyCode() }
         verifyButton.visibility = View.GONE
 
-        resendButton = addButton(page, text.resend, secondary = true) {
+        resendButton = addButton(page, labels.resend, secondary = true) {
             requestCode(forceResend = true)
         }
         resendButton.visibility = View.GONE
 
-        addButton(page, text.back, secondary = true) {
+        addButton(page, labels.back, secondary = true) {
             setResult(RESULT_CANCELED)
             finish()
         }
 
-        if (auth == null) statusText.text = text.missingFirebase
+        if (auth == null) statusText.text = labels.missingFirebase
     }
 
     private fun requestCode(forceResend: Boolean) {
