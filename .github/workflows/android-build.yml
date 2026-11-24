@@ -74,7 +74,7 @@ jobs:
           grep -E "Signer #1 certificate SHA-1 digest|Signer #1 certificate SHA-256 digest" "$OUT/fingerprints.txt"
 
           if [ "$BUILD_MODE" = "firebase-enabled" ]; then
-            FIREBASE_STATUS="google-services.json validated; Firebase Email/Password provider, email verification, and authorized domains still need verification."
+            FIREBASE_STATUS="google-services.json validated; native Phone Auth code is included, but Phone provider status, SHA fingerprint registration, billing/test-phone configuration, and production Firestore Rules publication still require Console verification."
           else
             FIREBASE_STATUS="NOT CONFIGURED — this is a UI-only APK; Firebase Authentication is unavailable."
           fi
