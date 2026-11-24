@@ -9,11 +9,11 @@ Native Android client for SM CALL.
 - UI language options: Bengali, English, Arabic and Hindi (coverage is partial and still needs review)
 - Firebase Android project in the checked-in client configuration: `sm-call-665e5`
 
-## Current verified repository facts — 23 November 2026 (updated after merge)
+## Current verified repository facts — 24 November 2026
 
 - `android/app/google-services.json` exists and identifies Firebase project `sm-call-665e5` for package `com.smcall.app`.
 - The GitHub Pages web prototype in the root `index.html` still uses project `sm-call-bf23e`. These Firebase projects do not share Authentication users or Firestore data.
-- The latest phone-OTP Firebase-enabled debug APK is from [workflow run 45123936308](https://github.com/mohammadsajib377430-dot/SM-CALL/actions/runs/45123936308). The Android unit-test and APK-build steps passed; the Firestore emulator/prototype workflow [45123936341](https://github.com/mohammadsajib377430-dot/SM-CALL/actions/runs/45123936341) also passed.
+- The latest confirmed merged-phone-OTP Firebase-enabled debug APK before the 24 November metadata-only workflow update is from [workflow run 45124364767](https://github.com/mohammadsajib377430-dot/SM-CALL/actions/runs/45124364767). Android unit tests, APK assembly and artifact upload passed. The Firestore emulator/prototype workflow [45124370203](https://github.com/mohammadsajib377430-dot/SM-CALL/actions/runs/45124370203) also passed.
 - The native app already contains Email/Password registration, email verification, password reset, a personal-chat screen and Firestore message listeners. The personal-chat flow has not been confirmed by a new physical-device test in this update.
 - Audio/video buttons still show a not-implemented message. The WebRTC dependency alone does not implement media transport or signaling.
 - Firestore chat-group rules allow up to 20 members, but native group-chat invitation and membership management are not complete.
@@ -63,7 +63,7 @@ Confirm the active project before running this production-changing command. Loca
 
 ## Remaining Android work
 
-- Complete and verify the Phone OTP pull request.
+- Complete physical-device verification of the merged Phone OTP flow.
 - Align the Android and web clients to one Firebase project only after the canonical project is explicitly chosen; no web migration is included in PR #2.
 - Complete localization across all screens and error states.
 - Finish secure group-chat invitation and membership management.
