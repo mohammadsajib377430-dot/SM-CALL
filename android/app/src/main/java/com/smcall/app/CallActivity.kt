@@ -10,8 +10,6 @@ import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
@@ -70,13 +68,13 @@ class CallActivity : Activity() {
         if (!hasPermissions()) {
             val permissions = if (callType == "video") arrayOf(Manifest.permission.RECORD_AUDIO, Manifest.permission.CAMERA)
                 else arrayOf(Manifest.permission.RECORD_AUDIO)
-            ActivityCompat.requestPermissions(this, permissions, PERMISSION_REQUEST)
+            requestPermissions(permissions, PERMISSION_REQUEST)
         } else startCallEngine()
     }
 
     private fun hasPermissions(): Boolean =
-        ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED &&
-            (callType != "video" || ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED)
+        checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED &&
+            (callType != "video" || checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED)
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
