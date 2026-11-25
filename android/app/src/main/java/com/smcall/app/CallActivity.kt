@@ -56,6 +56,7 @@ class CallActivity : Activity() {
     private var candidateListener: ListenerRegistration? = null
     private var answerApplied = false
     private var remoteDescriptionSet = false
+    private val pendingRemoteCandidates = mutableListOf<IceCandidate>()
     private var muted = false
     private var cameraEnabled = true
     private lateinit var status: TextView
@@ -210,11 +211,17 @@ class CallActivity : Activity() {
         peer?.createOffer(object : SdpObserver {
             override fun onCreateSuccess(desc: SessionDescription?) {
                 if (desc == null) return
-                peer?.setLocalDescription(simpleObserver(), desc)
-                db.collection("callRooms").document(roomId).update(
-                    "offer", mapOf("type" to desc.type.canonicalForm(), "sdp" to desc.description),
-                    "updatedAt", FieldValue.serverTimestamp()
-                )
+                peer?.setLocalDescription(object : SdpObserver {
+                    override fun onSetSuccess() {
+                        db.collection("callRooms").document(roomId).update(
+                            "offer", mapOf("type" to desc.type.canonicalForm(), "sdp" to desc.description),
+                            "updatedAt", FieldValue.serverTimestamp()
+                        )
+                    }
+                    override fun onSetFailure(error: String?) { showError(error) }
+                    override fun onCreateSuccess(value: SessionDescription?) {}
+                    override fun onCreateFailure(error: String?) { showError(error) }
+                }, desc)
             }
             override fun onSetSuccess() {}
             override fun onCreateFailure(error: String?) { showError(error) }
@@ -233,7 +240,10 @@ class CallActivity : Activity() {
                     answerApplied = true
                     val type = SessionDescription.Type.fromCanonicalForm(answer["type"] as? String ?: "answer")
                     peer?.setRemoteDescription(object : SdpObserver {
-                        override fun onSetSuccess() { remoteDescriptionSet = true }
+                        override fun onSetSuccess() {
+                            remoteDescriptionSet = true
+                            flushRemoteCandidates()
+                        }
                         override fun onSetFailure(error: String?) { showError(error) }
                         override fun onCreateSuccess(desc: SessionDescription?) {}
                         override fun onCreateFailure(error: String?) {}
@@ -247,6 +257,7 @@ class CallActivity : Activity() {
                     peer?.setRemoteDescription(object : SdpObserver {
                         override fun onSetSuccess() {
                             remoteDescriptionSet = true
+                            flushRemoteCandidates()
                             createAnswer()
                         }
                         override fun onSetFailure(error: String?) { showError(error) }
@@ -262,11 +273,17 @@ class CallActivity : Activity() {
         peer?.createAnswer(object : SdpObserver {
             override fun onCreateSuccess(desc: SessionDescription?) {
                 if (desc == null) return
-                peer?.setLocalDescription(simpleObserver(), desc)
-                db.collection("callRooms").document(roomId).update(
-                    "answer", mapOf("type" to desc.type.canonicalForm(), "sdp" to desc.description),
-                    "updatedAt", FieldValue.serverTimestamp()
-                )
+                peer?.setLocalDescription(object : SdpObserver {
+                    override fun onSetSuccess() {
+                        db.collection("callRooms").document(roomId).update(
+                            "answer", mapOf("type" to desc.type.canonicalForm(), "sdp" to desc.description),
+                            "updatedAt", FieldValue.serverTimestamp()
+                        )
+                    }
+                    override fun onSetFailure(error: String?) { showError(error) }
+                    override fun onCreateSuccess(value: SessionDescription?) {}
+                    override fun onCreateFailure(error: String?) { showError(error) }
+                }, desc)
             }
             override fun onSetSuccess() {}
             override fun onCreateFailure(error: String?) { showError(error) }
@@ -291,9 +308,15 @@ class CallActivity : Activity() {
                     val mid = doc.getString("sdpMid") ?: return@forEach
                     val index = (doc.getLong("sdpMLineIndex") ?: 0L).toInt()
                     val candidate = doc.getString("candidate") ?: return@forEach
-                    peer?.addIceCandidate(IceCandidate(mid, index, candidate))
+                    val ice = IceCandidate(mid, index, candidate)
+                    if (remoteDescriptionSet) peer?.addIceCandidate(ice) else pendingRemoteCandidates.add(ice)
                 }
             }
+    }
+
+    private fun flushRemoteCandidates() {
+        pendingRemoteCandidates.forEach { peer?.addIceCandidate(it) }
+        pendingRemoteCandidates.clear()
     }
 
     private fun showError(message: String?) {
