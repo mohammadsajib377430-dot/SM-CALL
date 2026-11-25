@@ -1,6 +1,7 @@
 package com.smcall.app
 
 import android.app.Activity
+import android.app.AlertDialog
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -37,6 +38,8 @@ class MainActivity : Activity() {
     private lateinit var nameInput: EditText
     private lateinit var statusText: TextView
     private var messageListener: ListenerRegistration? = null
+    private var incomingCallListener: ListenerRegistration? = null
+    private val handledIncomingCalls = mutableSetOf<String>()
     private val phoneAuthRequestCode = 4201
 
     private data class Labels(
@@ -114,6 +117,12 @@ class MainActivity : Activity() {
         if (requestCode == phoneAuthRequestCode && resultCode == RESULT_OK) {
             auth?.currentUser?.let { refreshSignedInUser(it) }
         }
+    }
+
+    override fun onDestroy() {
+        incomingCallListener?.remove()
+        messageListener?.remove()
+        super.onDestroy()
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -332,14 +341,12 @@ class MainActivity : Activity() {
         val page = baseScreen(); addBrand(page)
         addText(page, copy.home, 27f, true); addSpace(page, 8)
         addText(page, user.email ?: user.phoneNumber.orEmpty(), 15f); addSpace(page, 18)
+        listenForIncomingCalls(user)
         addButton(page, copy.chats) {
             Toast.makeText(this, "চ্যাট খুলছে...", Toast.LENGTH_SHORT).show()
             openChats(user)
         }
-        addButton(page, copy.audio, true) { showNotReady() }
-        addButton(page, copy.video, true) { showNotReady() }
-        addButton(page, copy.groupAudio, true) { showNotReady() }
-        addButton(page, copy.groupVideo, true) { showNotReady() }
+        addText(page, "বন্ধুর চ্যাট খুলে অডিও বা ভিডিও কল শুরু করুন।", 14f)
         addButton(page, copy.logout, true) { auth?.signOut(); signupMode = false; renderAuth() }
     }
 
@@ -431,6 +438,11 @@ class MainActivity : Activity() {
         val page = baseScreen(); addBrand(page)
         addText(page, title, 23f, true); addSpace(page, 6)
         addText(page, "ব্যক্তিগত চ্যাট", 13f)
+        val peerUid = chatId.split("_").firstOrNull { it != user.uid }
+        if (peerUid != null) {
+            addButton(page, "অডিও কল শুরু করুন") { startOutgoingCall(user, peerUid, "audio") }
+            addButton(page, "ভিডিও কল শুরু করুন", true) { startOutgoingCall(user, peerUid, "video") }
+        }
         val messagesBox = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         val messageScroll = ScrollView(this).apply {
             isFillViewport = false
@@ -483,6 +495,48 @@ class MainActivity : Activity() {
             }
     }
 
+    private fun startOutgoingCall(user: FirebaseUser, targetUid: String, type: String) {
+        if (!isVerifiedAccount(user)) { Toast.makeText(this, "আগে ইমেইল যাচাই করুন।", Toast.LENGTH_LONG).show(); return }
+        val room = hashMapOf<String, Any>(
+            "hostUid" to user.uid, "targetUid" to targetUid, "members" to listOf(user.uid),
+            "callType" to type, "status" to "ringing", "maxParticipants" to 5,
+            "createdAt" to FieldValue.serverTimestamp(), "updatedAt" to FieldValue.serverTimestamp()
+        )
+        FirebaseFirestore.getInstance().collection("callRooms").add(room).addOnSuccessListener { ref ->
+            startActivity(Intent(this, CallActivity::class.java).putExtra(CallActivity.EXTRA_ROOM_ID, ref.id)
+                .putExtra(CallActivity.EXTRA_CALLER, true).putExtra(CallActivity.EXTRA_CALL_TYPE, type))
+        }.addOnFailureListener { Toast.makeText(this, "কল শুরু হয়নি: ${it.localizedMessage}", Toast.LENGTH_LONG).show() }
+    }
+
+    private fun listenForIncomingCalls(user: FirebaseUser) {
+        incomingCallListener?.remove()
+        incomingCallListener = FirebaseFirestore.getInstance().collection("callRooms")
+            .whereEqualTo("targetUid", user.uid).whereEqualTo("status", "ringing")
+            .addSnapshotListener(this) { snapshot, error ->
+                if (error != null || snapshot == null) return@addSnapshotListener
+                snapshot.documents.forEach { room ->
+                    if (!handledIncomingCalls.add(room.id)) return@forEach
+                    val callerUid = room.getString("hostUid") ?: return@forEach
+                    val type = room.getString("callType") ?: "audio"
+                    FirebaseFirestore.getInstance().collection("users").document(callerUid).get().addOnSuccessListener { profile ->
+                        val callerName = profile.getString("name") ?: "SM CALL User"
+                        AlertDialog.Builder(this).setTitle(if (type == "video") "ভিডিও কল" else "অডিও কল")
+                            .setMessage("$callerName আপনাকে কল করছেন।").setCancelable(false)
+                            .setPositiveButton("গ্রহণ করুন") { _, _ ->
+                                FirebaseFirestore.getInstance().collection("callRooms").document(room.id).update(
+                                    "members", FieldValue.arrayUnion(user.uid), "status", "active", "updatedAt", FieldValue.serverTimestamp()
+                                ).addOnSuccessListener {
+                                    startActivity(Intent(this, CallActivity::class.java).putExtra(CallActivity.EXTRA_ROOM_ID, room.id)
+                                        .putExtra(CallActivity.EXTRA_CALLER, false).putExtra(CallActivity.EXTRA_CALL_TYPE, type))
+                                }.addOnFailureListener { Toast.makeText(this, "কল গ্রহণ হয়নি: ${it.localizedMessage}", Toast.LENGTH_LONG).show() }
+                            }.setNegativeButton("এখন নয়") { _, _ ->
+                                FirebaseFirestore.getInstance().collection("callRooms").document(room.id)
+                                    .update("status", "ended", "updatedAt", FieldValue.serverTimestamp())
+                            }.show()
+                    }
+                }
+            }
+    }
     private fun showNotReady() {
         Toast.makeText(this, labels().notReady, Toast.LENGTH_LONG).show()
     }
