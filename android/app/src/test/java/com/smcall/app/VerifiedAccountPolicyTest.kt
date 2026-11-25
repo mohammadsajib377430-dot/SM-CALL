@@ -11,22 +11,17 @@ class VerifiedAccountPolicyTest {
     }
 
     @Test
-    fun acceptsFirebasePhoneAuthAccount() {
-        assertTrue(VerifiedAccountPolicy.isVerified(emailVerified = false, phoneNumber = "+8801712345678"))
+    fun rejectsPhoneOnlyAccount() {
+        assertFalse(VerifiedAccountPolicy.isVerified(emailVerified = false, phoneNumber = "+8801712345678"))
     }
 
     @Test
-    fun acceptsAccountWithEitherVerifiedProvider() {
-        assertTrue(VerifiedAccountPolicy.isVerified(emailVerified = true, phoneNumber = "+8801712345678"))
+    fun rejectsUnverifiedAccountEvenIfPhoneNumberExists() {
+        assertFalse(VerifiedAccountPolicy.isVerified(emailVerified = false, phoneNumber = "+8801712345678"))
     }
 
     @Test
     fun rejectsUnverifiedAccountWithoutPhoneNumber() {
         assertFalse(VerifiedAccountPolicy.isVerified(emailVerified = false, phoneNumber = null))
-    }
-
-    @Test
-    fun rejectsBlankPhoneNumber() {
-        assertFalse(VerifiedAccountPolicy.isVerified(emailVerified = false, phoneNumber = "   "))
     }
 }
