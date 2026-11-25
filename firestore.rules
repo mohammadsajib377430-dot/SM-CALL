@@ -79,6 +79,7 @@ service cloud.firestore {
 
       allow update: if signedIn()
         && request.resource.data.hostUid == resource.data.hostUid
+        && request.resource.data.targetUid == resource.data.targetUid
         && request.resource.data.callType == resource.data.callType
         && request.resource.data.maxParticipants == 5
         && request.resource.data.createdAt == resource.data.createdAt
@@ -123,6 +124,20 @@ service cloud.firestore {
             && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['answer', 'updatedAt'])
             && request.resource.data.answer is map
             && request.resource.data.updatedAt is timestamp
+          )
+          ||
+          // Either participant can end an active call; the invitee may also decline while ringing.
+          (
+            request.auth.uid in resource.data.members
+            && request.resource.data.status == 'ended'
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt'])
+          )
+          ||
+          (
+            request.auth.uid == resource.data.targetUid
+            && resource.data.status == 'ringing'
+            && request.resource.data.status == 'ended'
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt'])
           )
           ||
           // Last participant leaves: mark the room ended.
