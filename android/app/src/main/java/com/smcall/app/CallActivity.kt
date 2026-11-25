@@ -177,7 +177,7 @@ class CallActivity : Activity() {
             override fun onRenegotiationNeeded() {}
             override fun onAddTrack(receiver: RtpReceiver?, streams: Array<out org.webrtc.MediaStream>?) {
                 val track = receiver?.track() as? VideoTrack
-                if (track != null) runOnUiThread { track.addSink(remoteRenderer) }
+                if (track != null) runOnUiThread { remoteRenderer?.let { track.addSink(it) } }
             }
             override fun onTrack(transceiver: org.webrtc.RtpTransceiver?) {
                 val track = transceiver?.receiver?.track() as? VideoTrack
@@ -201,7 +201,7 @@ class CallActivity : Activity() {
         videoCapturer?.initialize(surfaceHelper, this, source.capturerObserver)
         videoCapturer?.startCapture(640, 480, 24)
         localVideo = factory?.createVideoTrack("smcall-video", source)
-        localVideo?.addSink(localRenderer)
+        localRenderer?.let { localVideo?.addSink(it) }
         localVideo?.let { peer?.addTrack(it, listOf("smcall-stream")) }
     }
 
