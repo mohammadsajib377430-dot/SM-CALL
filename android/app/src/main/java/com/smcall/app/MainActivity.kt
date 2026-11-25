@@ -195,7 +195,7 @@ class MainActivity : Activity() {
     }
 
     private fun isVerifiedAccount(user: FirebaseUser): Boolean =
-        user.isEmailVerified || !user.phoneNumber.isNullOrBlank()
+        VerifiedAccountPolicy.isVerified(user.isEmailVerified, user.phoneNumber)
 
     private fun renderCurrentScreen() {
         val user = auth?.currentUser

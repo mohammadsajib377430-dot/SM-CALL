@@ -94,6 +94,8 @@ class CallRoomRepository(
     }
 
     private fun requireVerifiedUser() = auth.currentUser?.also {
-        check(it.isEmailVerified) { "Verify your email before using calls." }
+        check(VerifiedAccountPolicy.isVerified(it.isEmailVerified, it.phoneNumber)) {
+            "Verify your email or phone number before using calls."
+        }
     } ?: error("Sign in before starting a call.")
 }
