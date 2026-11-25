@@ -182,12 +182,13 @@ class CallActivity : Activity() {
             }
             override fun onTrack(transceiver: org.webrtc.RtpTransceiver?) {
                 val track = transceiver?.receiver?.track() as? VideoTrack
-                if (track != null) runOnUiThread { track.addSink(remoteRenderer) }
+                if (track != null) runOnUiThread { remoteRenderer?.let { track.addSink(it) } }
             }
         })
         val audioConstraints = MediaConstraints()
-        audioSource = factory?.createAudioSource(audioConstraints)
-        audioTrack = factory?.createAudioTrack("smcall-audio", audioSource)
+        val source = factory?.createAudioSource(audioConstraints) ?: return
+        audioSource = source
+        audioTrack = factory?.createAudioTrack("smcall-audio", source)
         audioTrack?.let { peer?.addTrack(it, listOf("smcall-stream")) }
         if (callType == "video") startCamera()
     }
@@ -197,9 +198,10 @@ class CallActivity : Activity() {
         val camera = enumerator.deviceNames.firstOrNull { enumerator.isFrontFacing(it) }
             ?: enumerator.deviceNames.firstOrNull() ?: return
         videoCapturer = enumerator.createCapturer(camera, null) ?: return
-        surfaceHelper = SurfaceTextureHelper.create("SMCallCapture", egl!!.eglBaseContext)
+        val helper = SurfaceTextureHelper.create("SMCallCapture", egl!!.eglBaseContext)
+        surfaceHelper = helper
         val source = factory?.createVideoSource(false) ?: return
-        videoCapturer?.initialize(surfaceHelper, this, source.capturerObserver)
+        videoCapturer?.initialize(helper, this, source.capturerObserver)
         videoCapturer?.startCapture(640, 480, 24)
         localVideo = factory?.createVideoTrack("smcall-video", source)
         localRenderer?.let { localVideo?.addSink(it) }
