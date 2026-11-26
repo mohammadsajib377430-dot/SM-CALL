@@ -496,7 +496,7 @@ class MainActivity : Activity() {
     }
 
     private fun startOutgoingCall(user: FirebaseUser, targetUid: String, type: String) {
-        if (!isVerifiedAccount(user)) { Toast.makeText(this, "আগে ইমেইল যাচাই করুন।", Toast.LENGTH_LONG).show(); return }
+        if (!isVerifiedAccount(user)) { Toast.makeText(this, "আগে ইমেইল বা ফোন নম্বর যাচাই করুন।", Toast.LENGTH_LONG).show(); return }
         val room = hashMapOf<String, Any>(
             "hostUid" to user.uid, "targetUid" to targetUid, "members" to listOf(user.uid),
             "callType" to type, "status" to "ringing", "maxParticipants" to 5,

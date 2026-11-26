@@ -3,11 +3,23 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // SM CALL uses verified email/password accounts only.
-    function signedIn() {
+    function hasVerifiedEmail() {
       return request.auth != null
         && request.auth.token.keys().hasAny(['email_verified'])
         && request.auth.token.email_verified == true;
+    }
+
+    function hasVerifiedPhone() {
+      return request.auth != null
+        && request.auth.token.keys().hasAny(['phone_number'])
+        && request.auth.token.phone_number is string
+        && request.auth.token.phone_number.size() > 0;
+    }
+
+    // Only Firebase-verified email or phone accounts can use app data.
+    function signedIn() {
+      return request.auth != null
+        && (hasVerifiedEmail() || hasVerifiedPhone());
     }
 
     function chatPath(chatId) {
@@ -27,13 +39,29 @@ service cloud.firestore {
 
       allow create, update: if signedIn()
         && request.auth.uid == userId
-        && request.resource.data.keys().hasOnly(['uid', 'name', 'emailVerified', 'updatedAt'])
+        && request.resource.data.keys().hasOnly([
+          'uid', 'name', 'emailVerified', 'phoneVerified', 'updatedAt'
+        ])
         && request.resource.data.uid == userId
         && request.resource.data.name is string
         && request.resource.data.name.size() > 0
         && request.resource.data.name.size() <= 60
-        && request.resource.data.emailVerified == true
-        && request.resource.data.updatedAt is timestamp;
+        && request.resource.data.updatedAt is timestamp
+        && (
+          (
+            request.resource.data.keys().hasAll(['emailVerified'])
+            && request.resource.data.emailVerified == true
+            && hasVerifiedEmail()
+            && !request.resource.data.keys().hasAny(['phoneVerified'])
+          )
+          ||
+          (
+            request.resource.data.keys().hasAll(['phoneVerified'])
+            && request.resource.data.phoneVerified == true
+            && hasVerifiedPhone()
+            && !request.resource.data.keys().hasAny(['emailVerified'])
+          )
+        );
 
       allow delete: if false;
     }

@@ -6,70 +6,72 @@ Native Android client for SM CALL.
 
 - Android package: `com.smcall.app`
 - Minimum Android: API 24 (Android 7.0)
-- UI language options: Bengali, English, Arabic and Hindi (coverage is partial and still needs review)
-- Firebase Android project in the checked-in client configuration: `sm-call-665e5`
+- UI language options: Bengali, English, Arabic and Hindi (translation coverage is partial)
+- Android Firebase project in `google-services.json`: `sm-call-665e5`
 
-## Current verified repository facts — 24 November 2026
+## Current repository state — 26 November 2026
 
-- `android/app/google-services.json` exists and identifies Firebase project `sm-call-665e5` for package `com.smcall.app`.
-- The GitHub Pages web prototype in the root `index.html` still uses project `sm-call-bf23e`. These Firebase projects do not share Authentication users or Firestore data.
-- The latest confirmed merged-phone-OTP Firebase-enabled debug APK before the 24 November metadata-only workflow update is from [workflow run 45124364767](https://github.com/mohammadsajib377430-dot/SM-CALL/actions/runs/45124364767). Android unit tests, APK assembly and artifact upload passed. The Firestore emulator/prototype workflow [45124370203](https://github.com/mohammadsajib377430-dot/SM-CALL/actions/runs/45124370203) also passed.
-- The native app already contains Email/Password registration, email verification, password reset, a personal-chat screen and Firestore message listeners. The personal-chat flow has not been confirmed by a new physical-device test in this update.
-- Audio/video buttons still show a not-implemented message. The WebRTC dependency alone does not implement media transport or signaling.
-- Firestore chat-group rules allow up to 20 members, but native group-chat invitation and membership management are not complete.
-- Firestore call-room rules remain limited to 5 participants. The requested 20-person group video target is not implemented.
+- The latest repository commit at the start of this update was `121d45a` on `main`.
+- Android Firebase configuration exists for project `sm-call-665e5` and package `com.smcall.app`.
+- The GitHub Pages web prototype in the root `index.html` uses a different Firebase project, `sm-call-bf23e`. Authentication users and Firestore data are not shared automatically.
+- The native Android client contains both Email/Password authentication and a separate `PhoneOtpActivity` using Firebase `PhoneAuthProvider`.
+- A regression was introduced by commits `03298de` and `7593dca`: the shared account policy and Firestore rules were changed back to email-only, even though the phone OTP screen and phone-profile code remained. This prevented phone-only accounts from entering the native app's verified area and caused the Firestore emulator suite to fail.
+- The Android build for commit `121d45a` passed in [run 45667477400](https://github.com/mohammadsajib377430-dot/SM-CALL/actions/runs/45667477400).
+- The prototype/Firestore workflow failed in [run 45667477389](https://github.com/mohammadsajib377430-dot/SM-CALL/actions/runs/45667477389): 12 of 16 Firestore tests passed; four failed because phone-only access was rejected and call-room test fixtures omitted the required `targetUid`.
+- GitHub Pages build and deployment for commit `121d45a` succeeded in [run 45667477811](https://github.com/mohammadsajib377430-dot/SM-CALL/actions/runs/45667477811).
 
-## Phone OTP implementation — merged 23 November 2026
+## Phone OTP flow
 
-The implementation from [PR #2 — Add native Firebase phone OTP sign-in](https://github.com/mohammadsajib377430-dot/SM-CALL/pull/2) is merged into `main` as [commit 1b09620](https://github.com/mohammadsajib377430-dot/SM-CALL/commit/1b09620e800043f13c4bf28875de265f5824fe6e). It adds:
+`PhoneOtpActivity.kt` uses Firebase Phone Auth to request an SMS code, handle automatic verification, accept a manually entered six-digit code, and sign in with the Firebase phone credential. Bengali, Arabic, Persian and Devanagari digit normalization is included.
 
-- A native `PhoneOtpActivity` using Firebase `PhoneAuthProvider`.
-- E.164 phone input, SMS code entry, automatic verification callback, verification-session handling and resend-token support.
-- Bengali, Arabic, Persian and Devanagari digit normalization.
-- A phone OTP option on the existing sign-in screen; Email/Password remains available for compatibility.
-- Phone-verified profile handling in Android and matching Firestore rule/test changes.
+The main screen launches this activity. After Firebase verifies the phone number, the Android client stores only a `phoneVerified: true` marker in the public profile; the actual phone number must remain in owner-only private data.
 
-The CI checks passed: Android unit tests, Firebase configuration validation, APK assembly/artifact upload, prototype smoke checks and Firestore emulator tests. Real Firebase SMS delivery, production-rule deployment and physical-device behavior are still unverified.
+The account policy and Firestore rules must both accept either:
+- a Firebase ID token with `email_verified == true`, with a matching `emailVerified: true` profile marker; or
+- a Firebase Phone Auth ID token with a non-empty `phone_number` claim, with a matching `phoneVerified: true` profile marker.
+
+This change restores that policy and fixes the emulator fixtures. It does not enable the Phone provider in Firebase Console, publish production rules, deliver an SMS, or prove device login.
+
+## WebRTC status
+
+- Native Android contains a `CallActivity` with one-to-one WebRTC peer setup, SDP offer/answer exchange, Firestore ICE candidate signaling, microphone/camera capture, and local/remote video renderers.
+- The code has passed Android compilation in the latest successful build, but no two-device physical-call test is recorded. A successful APK build is not proof of working media, incoming-call reliability, NAT traversal or TURN availability.
+- Current call-room capacity remains five. The current Android call flow is one-to-one; 20-person group video is not implemented.
+- A reliable 20-person video room needs an SFU architecture, not a 20-peer mesh. Keep the current five-person limit until that architecture is built and tested.
 
 ## Firebase Console setup still required
 
 For Android project `sm-call-665e5`:
 
 1. Enable **Authentication → Sign-in method → Phone**.
-2. Register the current debug build's SHA-1 and SHA-256 fingerprints in the Android app settings.
-3. Configure the SMS region policy for only the countries being tested.
+2. Register the signing certificate fingerprints for the exact APK being tested.
+3. Restrict the SMS region policy to countries actually needed for testing.
 4. Add a Firebase test phone number and fixed code.
-5. Test with that test number on a physical Android device before sending real SMS.
+5. Test the fixed test number on a physical Android device before sending real SMS.
 
-Real SMS may require an eligible billing configuration and is subject to country-specific quotas and anti-abuse controls. Use Firebase test phone numbers first.
-
-See [PHONE_OTP_SETUP.md](PHONE_OTP_SETUP.md) for the safe setup and deployment sequence.
+Use Firebase test numbers first to avoid unnecessary SMS charges. Real SMS delivery may require eligible billing and is subject to country quotas and anti-abuse controls.
 
 ## Firestore security
 
-The pull request updates repository rules to accept either:
-- a Firebase ID token with `email_verified == true`, or
-- a Firebase Phone Auth ID token with a non-empty `phone_number` claim.
+The repository rules file is `firestore.rules`, referenced by `firebase.json`. The emulator tests run in CI but do not publish production rules.
 
-The matching public profile marker must be `emailVerified: true` or `phoneVerified: true`. Phone numbers must not be copied into public user profiles; private phone data belongs in owner-only `privateUsers/{uid}`.
-
-Rules in GitHub are not automatically published. After reviewing and merging the change, deploy only to the intended Android project:
+After reviewing and merging the rules, deploy only to the intended Android project:
 
 ```sh
 firebase deploy --only firestore:rules --project sm-call-665e5
 ```
 
-Confirm the active project before running this production-changing command. Local emulator tests do not publish rules.
+Confirm the active Firebase project in the Console before running a production-changing command. Do not deploy these rules to the Web Demo project without reviewing its separate data model.
 
 ## Remaining Android work
 
-- Complete physical-device verification of the merged Phone OTP flow.
-- Align the Android and web clients to one Firebase project only after the canonical project is explicitly chosen; no web migration is included in PR #2.
-- Complete localization across all screens and error states.
-- Finish secure group-chat invitation and membership management.
-- Implement real one-to-one audio/video calling with signaling, ICE/TURN and device lifecycle handling.
-- Design and test an SFU-based architecture before targeting 20 simultaneous video participants; a peer-to-peer mesh is not a reliable 20-person design.
-- Increase call-room rules and server-side limits from 5 only when the 20-person call implementation is ready and tested.
+- Complete the phone OTP regression fix and obtain a passing Firestore emulator run.
+- Enable Phone Auth and test with a Firebase test number on a physical Android device.
+- Register a stable signing key; GitHub-hosted debug signing fingerprints can change between runs.
+- Verify the one-to-one WebRTC call on two physical devices and configure TURN if required.
+- Finish localization across every screen and error state.
+- Complete secure group-chat invitation and membership management.
+- Design and test an SFU before raising group video above the current five-person limit.
 - Add release signing, AAB generation and physical-device regression tests.
 
-A successful build is not proof of SMS delivery, Firestore production-rule deployment, or working calls.
+A passing unit test or APK build does not prove SMS delivery, production-rule publication, or successful calls.
