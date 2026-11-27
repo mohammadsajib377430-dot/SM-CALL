@@ -111,6 +111,17 @@ test("a Firebase Phone Auth user can create a phone-verified profile and use cha
     text: "Phone-authenticated message",
     createdAt: serverTimestamp()
   }));
+
+  await assertSucceeds(setDoc(doc(phoneUser, "callRooms", "phone-call"), {
+    hostUid: "phone-user",
+    targetUid: "friend",
+    members: ["phone-user"],
+    callType: "video",
+    status: "ringing",
+    maxParticipants: 5,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp()
+  }));
 });
 
 test("a phone account cannot claim email verification in its public profile", async () => {
@@ -258,6 +269,7 @@ test("verified users can join a call room by its private room ID, up to five par
 
   await assertSucceeds(setDoc(roomRef, {
     hostUid: "alice",
+    targetUid: "bob",
     members: ["alice"],
     callType: "audio",
     status: "ringing",
@@ -286,6 +298,7 @@ test("a sixth participant cannot join a full call room", async () => {
   // The host creates the room alone, then each verified invitee joins in turn.
   await assertSucceeds(setDoc(roomRef, {
     hostUid: "alice",
+    targetUid: "bob",
     members: ["alice"],
     callType: "video",
     status: "ringing",
@@ -316,6 +329,7 @@ test("the last call-room participant can end the room but cannot alter host or c
   const roomRef = doc(alice, "callRooms", "end-room");
   await assertSucceeds(setDoc(roomRef, {
     hostUid: "alice",
+    targetUid: "bob",
     members: ["alice"],
     callType: "video",
     status: "ringing",

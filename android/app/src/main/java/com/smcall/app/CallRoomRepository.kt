@@ -23,11 +23,15 @@ class CallRoomRepository(
         private const val COLLECTION = "callRooms"
     }
 
-    fun createRoom(type: String): Task<DocumentReference> {
+    fun createRoom(type: String, targetUid: String): Task<DocumentReference> {
         require(type == TYPE_AUDIO || type == TYPE_VIDEO) { "Call type must be audio or video." }
         val user = requireVerifiedUser()
+        require(targetUid.isNotBlank() && targetUid != user.uid) {
+            "A different invitee UID is required."
+        }
         val room = hashMapOf<String, Any>(
             "hostUid" to user.uid,
+            "targetUid" to targetUid,
             "members" to listOf(user.uid),
             "callType" to type,
             "status" to "ringing",
