@@ -278,8 +278,13 @@ test("verified users can join a call room by its private room ID, up to five par
     updatedAt: serverTimestamp()
   }));
 
-  // The room ID is the invitation; room collections cannot be listed.
+  // The host and explicitly invited target can read the room by ID.
+  await assertSucceeds(getDoc(doc(alice, "callRooms", "private-room-id")));
   await assertSucceeds(getDoc(doc(bob, "callRooms", "private-room-id")));
+
+  // A different verified user cannot read the room even if they know its ID.
+  const mallory = userDb("mallory");
+  await assertFails(getDoc(doc(mallory, "callRooms", "private-room-id")));
   await assertFails(getDocs(collection(bob, "callRooms")));
 
   await assertSucceeds(updateDoc(doc(bob, "callRooms", "private-room-id"), {

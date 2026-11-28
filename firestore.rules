@@ -85,9 +85,14 @@ service cloud.firestore {
     }
 
     match /callRooms/{roomId} {
-      // A room ID is a private invite: verified users may read one room by ID,
-      // but no one may list/browse all rooms. Share the ID only with invitees.
-      allow get: if signedIn();
+      // Only the host, explicitly invited target, or current participants may read a room.
+      // Knowing or guessing a room ID alone is not sufficient authorization.
+      allow get: if signedIn()
+        && (
+          request.auth.uid == resource.data.hostUid
+          || request.auth.uid == resource.data.targetUid
+          || request.auth.uid in resource.data.members
+        );
       allow list: if signedIn() && resource.data.targetUid == request.auth.uid;
 
       allow create: if signedIn()
